@@ -9,7 +9,7 @@ async page => {
   await page.evaluate(()=>{World.reset();__dbg.newGame();__dbg.startGame();});
   await page.getByRole('button',{name:'开始教程'}).click();
   await page.locator('#cabinPower').click();
-  await page.locator('#fieldDialog').getByRole('button',{name:'检查舱门',exact:true}).click();
+  await page.locator('#evaDepart').click();
   await page.locator('#fieldDialog').getByRole('button',{name:'出舱',exact:true}).click();
   await page.locator('#skipGuide').click();
   state=await page.evaluate(()=>({water:__dbg.G().water,batt:__dbg.G().batt,o2:__dbg.G().o2,active:Expedition.model.guide.active}));

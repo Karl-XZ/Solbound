@@ -5,8 +5,8 @@ window.Expedition = (() => {
   let releaseStick = () => {};
   const touchControls = () => innerWidth <= 700 || matchMedia('(pointer:coarse)').matches;
   const guide = {
-    console: ['点击上方的电量卡', '太阳能板发电偏低。先查看发电量。', 'console', '查看电量'],
-    depart: ['点击舱门', '我们要出舱修复太阳能板。先检查天气和氧气。', 'door', '检查舱门'],
+    console: ['打开基地控制台', '点击电力台或下方的电量卡。查看发电量。', 'console', '打开控制台'],
+    depart: ['点击「出舱探索」', '底部显示发电量。太阳能板有积灰。供电接头也松了。我们要出舱维修。', 'departure', '出舱探索'],
     move: ['走到黄色光圈', '让宇航员走进黄色光圈。'],
     clean: ['清扫太阳能板', '沿箭头走到太阳能板旁。点击「清扫太阳能板」。再用刷子擦掉灰尘。'],
     repair: ['修复供电接头', '接头仍然松着。点击「固定松脱接头」。再把接头接回接口。'],
@@ -36,6 +36,7 @@ window.Expedition = (() => {
   }
   function allowCabinAction(item) {
     if(!model.guide.active)return true;
+    if(model.step==='depart' && item==='door')return true;
     if(guide[model.step]?.[2]===item)return true;
     Habitat.toast(guide[model.step]?.[0] || '请先完成当前步骤。');return false;
   }
@@ -81,11 +82,7 @@ window.Expedition = (() => {
   }
   function inspectPower() {
     if(!api.canAct() || choiceOpen)return;
-    const g=api.state(),power=api.powerStatus();
-    showChoice('检查发电',`<p>设备正常时可发电 <b>${power.normal} 格</b>。</p><p>现在只发电 <b>${g.gen} 格</b>。</p><ul>${power.causes.map(c=>`<li>${c}。</li>`).join('')}</ul><p>我们要出舱清扫板面。还要修复供电接头。</p>`,[
-      {label:'检查舱门',run:()=>{notify('console');api.inspect('door',$('[data-object="door"]'));}},
-      {label:'关闭说明',run:()=>{}}
-    ]);
+    api.plan(); notify('console');
   }
   function requestDeparture() {
     if(outside)return;
@@ -191,6 +188,8 @@ window.Expedition = (() => {
     const card=$('#missionGuide');if(!card)return;
     document.querySelectorAll('.tutorial-target').forEach(e=>e.classList.remove('tutorial-target'));
     const active=model.guide.active && api.state().sol===1 && !api.state().over;
+    $('#bGo').disabled=active && model.step!=='allocate';
+    $('#bGo').innerHTML=active && model.step==='allocate'?'完成分电<span>▶</span>':'结束今天<span>▶</span>';
     $('#frame').classList.toggle('tutorial-focused',active);
     $('#bookSkipGuide').hidden=!active;
     $('#fieldHud').classList.toggle('guided',active);
@@ -200,7 +199,8 @@ window.Expedition = (() => {
     const step=model.step,g=guide[step];if(!g)return;
     const power=api.powerStatus();
     let description=g[1];
-    if(step==='console')description=`上方显示：今日发电 ${api.state().gen} 格。正常约 ${power.normal} 格。点击电量卡查看故障。`;
+    if(step==='console')description=`下方显示：今日发电 ${api.state().gen} 格。正常约 ${power.normal} 格。点击电量卡打开控制台。`;
+    if(step==='depart')description=`底部显示：今日发电 ${api.state().gen} 格。正常约 ${power.normal} 格。太阳能板有积灰。供电接头也松了。点击「出舱探索」。`;
     if(step==='move')description=touchControls()?'拖动左下角的摇杆。让宇航员走进黄色光圈。':'按方向键移动。让宇航员走进黄色光圈。';
     if(step==='repair')description=`清扫后发电提高到 ${api.state().gen} 格。接头仍然松着。点击「固定松脱接头」。`;
     if(step==='return')description=`发电量已提高到 ${api.state().gen} 格。沿舱门箭头返回。靠近后点击「回舱」。`;
@@ -210,7 +210,7 @@ window.Expedition = (() => {
     if(step!==lastGuide){
       card.innerHTML=`<span class="field-eyebrow">第 1 天 · 步骤 ${model.guide.index+1} / 10</span><h3>${g[0]}</h3><p>${description}</p><div><button id="guideLocate" class="field-button">${g[3] || '查看任务位置'}</button><button id="skipGuide" class="text-button">跳过教程</button></div>`;
       $('#skipGuide').onclick=()=>{model.skip();renderGuide();markers();Habitat.toast('教程已跳过。你可以自行完成任务。');};
-      $('#guideLocate').onclick=()=>{if(g[2]){const el=g[2]==='console'?$('#cabinPower'):document.querySelector(`[data-object="${g[2]}"]`);if(el){el.scrollIntoView({block:'center',inline:'center',behavior:'smooth'});el.focus({preventScroll:true});api.inspect(g[2],el);}}else showMap();};
+      $('#guideLocate').onclick=()=>{if(g[2]==='departure')return requestDeparture();if(g[2]){const el=g[2]==='console'?$('#cabinPower'):document.querySelector(`[data-object="${g[2]}"]`);if(el){el.scrollIntoView({block:'center',inline:'center',behavior:'smooth'});el.focus({preventScroll:true});api.inspect(g[2],el);}}else showMap();};
       lastGuide=step;markers();
     }
     if(g[2])document.querySelector(`[data-object="${g[2]}"]`)?.classList.add('tutorial-target');

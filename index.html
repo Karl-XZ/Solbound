@@ -283,6 +283,7 @@ button{font:inherit;color:inherit}
 <link rel="stylesheet" href="css/journal.css">
 <link rel="stylesheet" href="css/habitat.css">
 <link rel="stylesheet" href="css/expedition.css">
+<link rel="stylesheet" href="css/console.css">
 </head>
 <body>
 <div id="frame">
@@ -316,8 +317,6 @@ button{font:inherit;color:inherit}
         <svg viewBox="0 0 36 42" fill="none" aria-hidden="true"><path d="M9 4h21v33H9a4 4 0 0 1-4-4V8a4 4 0 0 1 4-4Z"/><path d="M10 4v33M17 18l3 3 6-7M15 28h10M5 32h25"/></svg>
         <b>今日手册</b><small id="dockSol">SOL 01</small>
       </button>
-      <button id="resourceBook" class="shelf-shortcut" aria-controls="notebook">资源仪表</button>
-      <button id="energyBook" class="shelf-shortcut" aria-controls="notebook">能源分配</button>
     </nav>
     <div id="survivalHUD" class="survival-bar" role="group" aria-label="基地资源">
       <button data-item="food" aria-label="查看食物"><span class="resource-icon">🍞</span><span>食物<b id="cabinFood">50</b></span></button>
@@ -327,6 +326,13 @@ button{font:inherit;color:inherit}
       <button data-item="calendar" aria-label="查看任务日历"><span class="resource-icon">📅</span><span>火星日<b id="cabinDay">01<small> / 30</small></b></span></button>
     </div>
     <span class="room-hint" id="roomHint">点击物品进行操作。</span>
+    <section id="baseConsole" aria-label="基地控制台" hidden>
+      <div id="solCard" class="card"><div class="sol-k">火星日<button class="q" data-tip="sol">?</button></div><div class="sol-n"><b id="solN">01</b><span> / 30</span></div><div class="sol-bar"><s id="solBar"></s></div></div>
+      <div id="meters" class="card" aria-label="前哨站资源"></div><div id="careMeters" hidden></div>
+      <div id="fore" class="card"></div>
+      <div id="power" class="card"></div>
+      <div id="topbtns"><button class="pill" id="consoleReturn">返回生活舱</button><button class="pill" id="bComm">地球</button><button class="pill" id="bSrc">数据来源</button><button class="pill" id="bSnd">声音</button></div>
+    </section>
     <div id="notebook" class="notebook" data-book="today" role="region" aria-label="今日手册">
       <header class="book-shell">
         <span class="book-brand"><span class="brand-mark">✦</span> ARES <span id="bookName">今日手册</span></span>
@@ -337,32 +343,18 @@ button{font:inherit;color:inherit}
         <div class="book-running-head"><span id="chapterName">今日简报</span><span>SOL <b id="journalDay">01</b> / 30</span></div>
         <div class="book-pages">
           <section id="briefPage" class="book-page" data-book="today" data-sheet="brief" data-label="今日简报" aria-label="今日简报">
-            <div id="solCard"><div class="sol-k">杰泽罗前哨站 · 任务进行中</div><div class="sol-n">SOL <b id="solN">01</b><span> / 30</span></div><div class="sol-bar"><s id="solBar"></s></div></div>
+            <div class="entry-label">今日任务记录</div>
             <div id="journalEvent" aria-live="polite"></div>
           </section>
           <section class="book-page" data-book="today" data-sheet="decision" data-label="今日决定" aria-label="今日决定" hidden><div id="journalChoices"></div></section>
-          <section class="book-page" data-book="today" data-sheet="supplies" data-label="物资清单" aria-label="物资清单" hidden>
-            <div class="page-eyebrow">LIFE SUPPORT / 宇航员 04 人</div><h2>物资数量</h2><p class="page-subtitle">请检查氧气、食物和电池。</p>
-            <div id="meters"></div><p class="page-note">预计变化会随电力分配更新。<br>氧气和食物不能耗尽。</p>
-          </section>
-          <section class="book-page" data-book="today" data-sheet="care" data-label="宇航员照护" aria-label="宇航员照护" hidden>
-            <div class="page-eyebrow">CREW CARE</div><h2>宇航员状态</h2><p class="page-subtitle">饮水、加餐和休息会影响宇航员状态。</p><div id="careMeters"></div><p class="page-note">每天饮水 −2.5。心情自然 −2。<br>点击舱内物品可加餐、喝水和聊天。净水机可以补充饮水。</p>
-          </section>
-          <section class="book-page" data-book="today" data-sheet="mission" data-label="任务状态" aria-label="任务状态" hidden>
-            <div class="page-eyebrow">MISSION STATUS</div><h2>任务目标</h2><p class="page-subtitle">生存 30 天。科学成果达到 100 分。</p><div id="missionMeters"></div><div class="mission-target"><span>这次任务的目标</span><b>科学 ≥ 100 · 辐射 &lt; 25 毫希</b><small>请提前升级屏蔽。屏蔽可以减少每天的辐射。</small></div>
-          </section>
-          <section class="book-page allocation-page" data-book="today" data-sheet="plan" data-label="电力安排" aria-label="电力安排" hidden>
-            <div class="page-eyebrow">DAILY ALLOCATION</div><h2>分配今日电力</h2><button id="planningNotice" hidden></button>
-            <div class="allocation-scroll"><div id="power"></div></div><div id="planActions"></div>
-          </section>
           <section class="book-page" data-book="today" data-sheet="weather" data-label="环境观测" aria-label="环境观测" hidden>
-            <div class="page-eyebrow">SURFACE TELEMETRY</div><h2>天气和环境</h2><p class="page-subtitle">请检查天气和辐射风险。</p><div id="fore"></div><div id="journalMap"></div>
+            <div class="page-eyebrow">SURFACE TELEMETRY</div><h2>基地位置</h2><p class="page-subtitle">天气和资源显示在基地控制台。</p><div id="journalMap"></div>
           </section>
           <div id="journalHistory"></div>
         </div>
         <footer class="book-pagination"><button id="previousPage" aria-label="上一页">← <span>上一页</span></button><div class="page-position"><span id="pageNumber">01 / 04</span><div id="pageTrack"></div></div><button id="nextPage" aria-label="下一页"><span>下一页</span> →</button></footer>
       </div>
-      <footer class="book-shell book-bottom"><span><i class="status-light"></i> JEZERO / 本地终端</span><div id="topbtns"><button id="bComm">地球</button><button id="bSrc">数据来源</button><button id="bSnd">声音</button></div></footer>
+      <footer class="book-shell book-bottom"><span><i class="status-light"></i> JEZERO / 本地终端</span><span>每日事件与任务记录</span></footer>
     </div>
   </section>
 

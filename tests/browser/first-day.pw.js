@@ -5,8 +5,8 @@ async (page) => {
   await page.getByRole('button',{name:'开始教程'}).waitFor({timeout:20000});
   await page.getByRole('button',{name:'开始教程'}).click();
   await page.locator('#cabinPower').click();
-  if(!await page.locator('#fieldDialog').innerText().then(t=>t.includes('积灰')&&t.includes('接头')))throw Error('faults not explained');
-  await page.locator('#fieldDialog').getByRole('button',{name:'检查舱门',exact:true}).click();
+  if(!await page.locator('#missionGuide').innerText().then(t=>t.includes('积灰')&&t.includes('接头')))throw Error('faults not explained');
+  await page.locator('#evaDepart').click();
   await page.locator('#fieldDialog').getByRole('button',{name:'出舱',exact:true}).click();
   let g;
   g=await page.evaluate(()=>({water:__dbg.G().water,o2:__dbg.G().o2,dose:__dbg.G().dose,step:Expedition.model.step,outside:Expedition.outside,player:World.getPlayer(),sites:{solar:World.getSite('solar'),walk:World.getSite('walk'),door:World.getSite('door')}}));

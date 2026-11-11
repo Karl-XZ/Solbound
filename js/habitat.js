@@ -172,6 +172,7 @@ window.Habitat = (() => {
       const interior = mode === 'interior', overview = mode === 'overview'; $('#habitatScene').hidden = !interior;
       $('#frame').classList.toggle('interior-view', interior);
       $('#frame').classList.toggle('overview-view', overview);
+      $('#frame').classList.toggle('console-open', overview); $('#baseConsole').hidden = !overview;
       $('#viewInterior').setAttribute('aria-pressed', String(interior)); $('#viewExterior').setAttribute('aria-pressed', String(!interior && !overview));
       $('#viewOverview').setAttribute('aria-pressed', String(overview)); $('#viewOverview').hidden = !interior && !overview;
       $('#viewInterior').textContent = interior || overview ? '基地生活' : '回舱指引'; $('#viewExterior').textContent = interior || overview ? '出舱探索' : '任务位置';

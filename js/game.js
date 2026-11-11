@@ -89,6 +89,7 @@
     bookType = 'today'; todaySheet = page === 'log' ? 'brief' : page; renderBook('turn-forward');
   }
   function showJournal(open, page) {
+    if (open && ['plan', 'supplies', 'care', 'mission'].includes(page)) return openConsole();
     Habitat.closeCard(); $('#notebook').hidden = !open; $('#frame').classList.toggle('notebook-open', open);
     if (page) { bookType = 'today'; todaySheet = page === 'log' ? 'brief' : page; }
     if (open) renderBook(); else updateShelf();
@@ -98,6 +99,10 @@
     if ($('#frame').classList.contains('nightfall')) return;
     if (bookType === type && !$('#notebook').hidden) return showJournal(false);
     bookType = type; showJournal(true); Sound.click();
+  }
+  function openConsole() {
+    if (busy || encounterOpen || Expedition.busy || G.over || utilityOpen()) return;
+    setSceneView('overview');
   }
   function lockPlanning(locked, message = '') {
     for (const el of [$('#power'), $('#planActions')]) { el.classList.toggle('off', locked); el.inert = locked; }
@@ -229,20 +234,19 @@
   }
   function buildHUD() {
     $('#meters').innerHTML = `<div class="c-h">前哨站状态</div>
-      ${meterRow('o2', '氧气', 'o2')}${meterRow('food', '食物', 'food')}${meterRow('batt', '电池', 'batt')}`;
-    $('#careMeters').innerHTML = `${meterRow('water', '饮用水', 'water')}${meterRow('meds', '药品', 'meds')}${meterRow('morale', '宇航员心情', 'morale')}`;
-    $('#missionMeters').innerHTML = `${meterRow('sci', '科学成果', 'sci')}${meterRow('dose', '辐射剂量', 'dose')}
+      ${meterRow('o2', '氧气', 'o2')}${meterRow('food', '食物', 'food')}${meterRow('dose', '辐射剂量', 'dose')}${meterRow('sci', '科学成果', 'sci')}${meterRow('batt', '电池', 'batt')}
       <div class="m-shield"><span><i class="dot shield"></i>屏蔽等级<button class="q" data-tip="shield">?</button></span><span class="lv"></span><span class="prog"></span></div>`;
+    $('#careMeters').innerHTML = `${meterRow('water', '饮用水', 'water')}${meterRow('meds', '药品', 'meds')}${meterRow('morale', '宇航员心情', 'morale')}`;
     $('#power').innerHTML = `
-      <div class="p-h"><span class="p-title">分配今日电力 <small>POWER ALLOCATION</small></span><details class="power-details"><summary>查看发电原因</summary><p id="powerExplanation"></p></details><span class="p-eq"></span></div>
+      <div class="p-h"><span class="p-title">今天的电</span><span class="p-eq"></span><details class="power-details"><summary>查看发电原因</summary><p id="powerExplanation"></p></details></div>
       <div class="p-tokens"></div>
       <div class="p-slots">${SLOTS.map(s => `<div class="slot" data-k="${s.k}">
           <div class="s-top"><i class="dot ${s.k}"></i><span class="s-name">${s.name}</span><button class="q" data-tipx="${s.k}">?</button></div>
           <div class="s-ctl"><button class="mn" aria-label="减少">−</button><b class="s-n">0</b><button class="pl" aria-label="增加">+</button></div>
-          <div class="s-eff"></div></div>`).join('')}</div>`;
+          <div class="s-eff"></div></div>`).join('')}</div><button id="planningNotice" hidden></button><div id="planActions"></div>`;
     $('#planActions').innerHTML = `
       <div class="p-foot">
-        <button class="field-button" id="evaDepart">经舱门出发探索</button>
+        <button class="eva" id="evaDepart">出舱探索</button>
         <span class="p-left"></span>
         <button class="btn go" id="bGo">完成分电<span>→</span></button>
       </div>`;
@@ -258,7 +262,7 @@
     $('#bGo').onclick = () => {
       if (Expedition.model.guide.active && Expedition.model.step === 'allocate') {
         if (G.alloc.o2 < 3) return Habitat.toast('制氧电量不足。请增加到 3 格。');
-        Expedition.notify('allocate'); showJournal(false); return;
+        Expedition.notify('allocate'); setSceneView('interior'); return;
       }
       Expedition.sleep();
     };
@@ -312,7 +316,7 @@
     });
     const left = p.left;
     $('.p-left').innerHTML = G.pool < 0 ? '' : left > 0 ? `剩 <b>${left}</b> 格 → ${p.wasted ? `电池已满。<b class="bad">浪费 ${p.wasted} 格</b>` : '存进电池'}` : '电全部分配完';
-    const eb = evaBlocked(); $('#evaDepart').textContent = eb || '经舱门出发探索'; $('#evaDepart').disabled = !!eb;
+    const eb = evaBlocked(); $('#evaDepart').innerHTML = `<span class="sw" aria-hidden="true"></span><span>${eb || '出舱探索'}<small>氧气 −3 · 辐射 +${Math.round((.25 + G.today.flareOut) * 100) / 100}</small></span>`; $('#evaDepart').disabled = !!eb;
     // 环境
     const sun = Math.round(G.sunVar * (G.storm > 0 ? G.stormMul : 1) * 100);
     const tau = G.storm > 0 ? (G.stormSave ? 6.2 : 6.8) : (.4 + (1 - G.sunVar) * 3).toFixed(1);
@@ -324,7 +328,7 @@
       <div class="f-row"><span>明天的太空天气</span><b class="${nextFlare ? 'bad' : 'good'}">${nextFlare ? '太阳风暴预警' : '平静'}</b></div>
       <div class="f-row"><span>信号到地球</span><b>${G.conj > 0 ? '日凌·中断' : f1(LT.minutes) + ' 分钟'}</b></div>
       ${G.storm > 0 ? `<div class="f-alert">沙尘暴还剩 ${G.storm} 天</div>` : nextStorm ? `<div class="f-alert">沙尘暴明天到达</div>` : ''}`;
-    $('#solN').textContent = String(G.sol).padStart(2, '0'); $('#solBar').style.width = (G.sol - 1) / SOLS * 100 + '%';
+    $('#solN').textContent = String(G.sol); $('#solBar').style.width = (G.sol - 1) / SOLS * 100 + '%';
     $('#journalDay').textContent = String(G.sol).padStart(2, '0'); $('#dockSol').textContent = `SOL ${String(G.sol).padStart(2, '0')}`;
     syncWorld(); Habitat.render(G); Expedition.render(G);
   }
@@ -486,13 +490,13 @@
     if (item === 'console') {
       Habitat.closeCard();
       if (Expedition.model.guide.active && Expedition.model.step === 'console') return Expedition.inspectPower();
-      return showJournal(true, 'plan');
+      return openConsole();
     }
     if (item === 'bed') { Habitat.closeCard(); return Expedition.sleep(); }
     if (item === 'bench') { Habitat.closeCard(); return Expedition.analyse(); }
     const card = data => Habitat.card({ ...data, anchor: target });
     const action = (key, label, hint, allowed, change, note) => ({ label: G.care[key] ? '今天已经完成' : label, hint, disabled: !!G.care[key] || !allowed(), run: () => careForCrew(key, allowed, change, note, item, target) });
-    const bookAction = (page, label) => ({ label, hint: '翻开今日手册', run: () => showJournal(true, page) });
+    const bookAction = (page, label) => ({ label, hint: page === 'brief' ? '翻开今日手册' : '打开基地控制台', run: () => showJournal(true, page) });
     if (item === 'food') return card({ icon: '🍞', title: '食物补给箱', value: `${f1(G.food)}<small>点</small>`, description: `宇航员每天消耗 ${FOOD_USE} 点食物。温室收获后会增加食物。加餐可提高心情。`, actions: [
       action('snack', '给大家加一餐', '食物 −3 · 心情 +6 · 每日一次', () => G.food >= 3 && G.morale < 100, () => { G.food -= 3; G.morale = clamp(G.morale + 6, 0, 100); }, '宇航员已加餐。食物 −3。心情最多 +6。'), bookAction('supplies', '清点生存物资')
     ] });
@@ -1002,7 +1006,7 @@
       blockReason: evaBlocked, preview, powerStatus, refresh: () => { computePool(); renderAll(); renderTodayRecords(); renderArchive(); },
       effect: (fn, note) => { fn(); G.today.notes.push(note); computePool(); renderAll(); renderTodayRecords(); renderArchive(); },
       view: mode => { sceneView=mode;showJournal(false);Habitat.closeCard();Habitat.view(mode); },
-      plan: () => showJournal(true, 'plan'), endDay: endSol, inspect: inspectCabinItem
+      plan: openConsole, endDay: endSol, inspect: inspectCabinItem
     });
     buildHUD(); newGame();
     $('#title').classList.add('on');
@@ -1014,12 +1018,7 @@
     $('#closeBook').onclick = () => { showJournal(false); $(bookType === 'today' ? '#todayBook' : '#archiveBook').focus({ preventScroll: true }); Sound.click(); };
     $('#todayBook').onclick = () => openNotebook('today');
     $('#archiveBook').onclick = () => openNotebook('archive');
-    const openDashboard = page => {
-      if (encounterOpen || Expedition.busy || G.over || $('#frame').classList.contains('nightfall')) return;
-      showJournal(true, page); Sound.click();
-    };
-    $('#resourceBook').onclick = () => openDashboard('supplies');
-    $('#energyBook').onclick = () => openDashboard('plan');
+    $('#consoleReturn').onclick = () => setSceneView('interior');
     $('#previousPage').onclick = () => flipBook(-1); $('#nextPage').onclick = () => flipBook(1);
     $('#planningNotice').onclick = () => journalPage(journalPhase === 'event' ? 'decision' : 'brief');
     $('#journalMap').innerHTML = mapSketch;

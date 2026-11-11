@@ -4,10 +4,10 @@ async page => {
   await page.getByRole('button',{name:'开始教程'}).waitFor({timeout:20000});
   await page.getByRole('button',{name:'开始教程'}).click();
   await page.locator('#guideLocate').click();
-  if(!await page.locator('#fieldDialog').innerText().then(t=>t.includes('积灰')&&t.includes('接头')))throw Error('mobile tutorial inspection is missing');
-  await page.locator('#fieldDialog').getByRole('button',{name:'关闭说明'}).click();
+  if(!await page.locator('#missionGuide').innerText().then(t=>t.includes('积灰')&&t.includes('接头')))throw Error('mobile tutorial inspection is missing');
   await page.screenshot({path:'output/playwright/mobile-cabin.png'});
   await page.locator('#skipGuide').click();
+  await page.locator('#consoleReturn').click();
   await page.getByRole('button',{name:'净水机：消耗电池净化饮用水'}).click();
   await page.getByRole('button',{name:/启动净水/}).click();
   await page.locator('.item-close').click();
@@ -15,7 +15,7 @@ async page => {
   await page.locator('[data-k="food"] .mn').click();await page.locator('[data-k="o2"] .pl').click();
   if(await page.evaluate(()=>__dbg.G().alloc.o2)!==4)throw Error('mobile power allocation failed');
   await page.screenshot({path:'output/playwright/mobile-power.png'});
-  await page.locator('#closeBook').click();
+  await page.locator('#consoleReturn').click();
   await page.locator('#viewExterior').click();await page.getByRole('button',{name:'出舱',exact:true}).click();
   const stick=page.locator('#touchStick'),r=await stick.boundingBox();
   if(!r || r.width<80)throw Error('mobile stick missing');
