@@ -184,6 +184,14 @@
     G.heat = 3 + T.heatAdj - (G.storm > 0 && G.stormSave ? 1 : 0);
     G.pool = G.gen - G.heat + G.batt - T.poolPenalty - (G.drainDays > 0 ? G.drain : 0);
   }
+  function powerStatus() {
+    const normal = Math.max(0, Math.round((12 + 3 * (G.build.rows - 2)) * G.sunVar * (G.storm > 0 ? G.stormMul : 1)));
+    const causes = [];
+    if (G.storm > 0) causes.push('沙尘暴挡住阳光');
+    if (G.panelEff < .98) causes.push(`太阳能板积灰，清洁度 ${Math.round(G.panelEff * 100)}%`);
+    if (G.damaged > 0) causes.push(`${G.damaged} 块板的接头或支架需要维修`);
+    return { normal, lost: Math.max(0, normal - G.gen), causes };
+  }
   const foodPer = () => FOOD_PER * (1 + .25 * (G.build.domes - 1));
   const sciPer = () => SCI_PER + .5 * G.build.labs;
   const used = () => G.alloc.o2 + G.alloc.food + G.alloc.shield + G.alloc.sci;
@@ -226,7 +234,7 @@
     $('#missionMeters').innerHTML = `${meterRow('sci', '科学成果', 'sci')}${meterRow('dose', '辐射剂量', 'dose')}
       <div class="m-shield"><span><i class="dot shield"></i>屏蔽等级<button class="q" data-tip="shield">?</button></span><span class="lv"></span><span class="prog"></span></div>`;
     $('#power').innerHTML = `
-      <div class="p-h"><span class="p-title">今天的电，怎么用 <small>POWER ALLOCATION</small></span><span class="p-eq"></span></div>
+      <div class="p-h"><span class="p-title">今天的电，怎么用 <small>POWER ALLOCATION</small></span><p id="powerExplanation"></p><span class="p-eq"></span></div>
       <div class="p-tokens"></div>
       <div class="p-slots">${SLOTS.map(s => `<div class="slot" data-k="${s.k}">
           <div class="s-top"><i class="dot ${s.k}"></i><span class="s-name">${s.name}</span><button class="q" data-tipx="${s.k}">?</button></div>
@@ -261,6 +269,8 @@
   }
   function renderAll() {
     clampAlloc(); const p = preview();
+    const power = powerStatus();
+    $('#powerExplanation').textContent = `今天发电 ${G.gen} 格；设备正常时，同样天气约能发 ${power.normal} 格。${power.causes.length ? '现在的线索：' + power.causes.join('；') + '。' : '设备运行正常。'}电池还有 ${G.batt} 格，供暖等预留后，今天能分配 ${G.pool} 格。`;
     // 仪表
     setBar('water', G.water / 100, (G.water - WATER_USE) / 100, `${f1(G.water)}<small>/100</small>`, fmt(-WATER_USE), 'bad');
     setBar('meds', G.meds / 9, G.meds / 9, `${G.meds}<small>份</small>`, '备用', 'meh');
@@ -974,7 +984,7 @@
     World.init($('#stage'));
     Habitat.init({ inspect: inspectCabinItem, view: setSceneView });
     Expedition.init({ state: () => G, canAct: () => !!G && !busy && !encounterOpen && !G.over && !utilityOpen() && !$('#frame').classList.contains('nightfall'),
-      blockReason: evaBlocked, preview, refresh: () => { computePool(); renderAll(); renderTodayRecords(); renderArchive(); },
+      blockReason: evaBlocked, preview, powerStatus, refresh: () => { computePool(); renderAll(); renderTodayRecords(); renderArchive(); },
       effect: (fn, note) => { fn(); G.today.notes.push(note); computePool(); renderAll(); renderTodayRecords(); renderArchive(); },
       view: mode => { sceneView=mode;showJournal(false);Habitat.closeCard();Habitat.view(mode); },
       plan: () => showJournal(true, 'plan'), endDay: endSol, inspect: inspectCabinItem

@@ -6,7 +6,7 @@ window.Expedition = (() => {
   const guide = {
     filter: ['先给基地补一点水', '伙伴口渴了。点净水机，看看一格格电怎样变成干净的水。', 'purifier'],
     drink: ['把水分享给伙伴', '水位升高了！现在点饮水桶，倒一杯水，看看伙伴的表情。', 'water'],
-    console: ['找出电少的原因', '点电力台：太阳能板积了灰，还有一个接头松了。设备需要我们帮忙。', 'console'],
+    console: ['找出电少的原因', '看看上方的电量卡，再点开电力台找线索。', 'console'],
     depart: ['带上工具，准备出发', '点舱门检查天气和氧气。出去一趟会用掉氧气，但看说明不会额外消耗。', 'door'],
     move: ['你来带路！', '用 WASD / 方向键移动，触屏用左下摇杆。先走到附近发光的练习点。拖动画面可以转头。'],
     clean: ['太阳能板在等你', '沿着金色标记走到太阳能板旁，按 E 或“开始清扫”，用刷子擦掉灰尘。'],
@@ -171,22 +171,29 @@ window.Expedition = (() => {
     card.hidden=!active;
     if(!active){lastGuide='';return;}
     const step=model.step,g=guide[step];if(!g)return;
+    const power=api.powerStatus();
+    const description=step==='console'?`看上方的电量卡：今天发电 ${api.state().gen} 格，设备正常时约 ${power.normal} 格。点电量卡或电力台，找找少发电的原因。`:g[1];
     let powerHint=$('#powerGuideHint');
     if(!powerHint && $('#power .p-h')){powerHint=document.createElement('p');powerHint.id='powerGuideHint';powerHint.className='field-note';$('#power .p-h').appendChild(powerHint);}
     if(powerHint)powerHint.textContent=step==='allocate'?'给制氧至少 3 格电，然后点“安排好了”。':'一格电只能分给一个设备。先看看制氧要用几格。';
     if(step!==lastGuide){
-      card.innerHTML=`<span class="field-eyebrow">第一天 · 边做边学 ${model.guide.index+1} / 10</span><h3>${g[0]}</h3><p>${g[1]}</p><div><button id="guideLocate" class="field-button">${g[2]?'找到它 →':'看看任务地图'}</button><button id="skipGuide" class="text-button">跳过剩余引导</button></div>`;
+      card.innerHTML=`<span class="field-eyebrow">第一天 · 边做边学 ${model.guide.index+1} / 10</span><h3>${g[0]}</h3><p>${description}</p><div><button id="guideLocate" class="field-button">${g[2]?'找到它 →':'看看任务地图'}</button><button id="skipGuide" class="text-button">跳过剩余引导</button></div>`;
       $('#skipGuide').onclick=()=>{model.skip();renderGuide();markers();Habitat.toast('引导已收起，继续自由探索。');};
-      $('#guideLocate').onclick=()=>{if(g[2]){const el=document.querySelector(`[data-object="${g[2]}"]`);if(el){el.scrollIntoView({block:'center',inline:'center',behavior:'smooth'});el.focus({preventScroll:true});api.inspect(g[2],el);}}else showMap();};
+      $('#guideLocate').onclick=()=>{if(g[2]){const el=g[2]==='console'?$('#cabinPower'):document.querySelector(`[data-object="${g[2]}"]`);if(el){el.scrollIntoView({block:'center',inline:'center',behavior:'smooth'});el.focus({preventScroll:true});api.inspect(g[2],el);}}else showMap();};
       lastGuide=step;markers();
     }
     if(g[2])document.querySelector(`[data-object="${g[2]}"]`)?.classList.add('tutorial-target');
+    $('#cabinPower').classList.toggle('tutorial-target',step==='console' || step==='allocate');
   }
   function render(g) {
     if(!$('#fieldHud'))return;
     if(model.reconcile(g))markers();
     const active=$('#hud').classList.contains('on') && !g.over;
     $('#fieldHud').hidden=!active;$('#fieldControls').hidden=!outside || !active;$('#fieldStats').hidden=!outside;
+    const power=api.powerStatus(), low=power.lost>0 || g.storm>0, batteryCap=8+g.battBonus;
+    $('#cabinPower').hidden=outside;$('#cabinPower').dataset.battery=String(g.batt);$('#cabinPower').dataset.loss=String(power.lost);$('#cabinPower').classList.toggle('low',low);
+    $('#cabinPower').setAttribute('aria-label',`电量卡：今日发电 ${g.gen} 格，正常约 ${power.normal} 格，电池余量 ${g.batt} 格，可分配 ${g.pool} 格。${low?'发电偏低。':''}点击查看用电和故障线索。`);
+    $('#cabinPower').innerHTML=`<span class="power-generation"><small>⚡ 今日发电</small><strong>${g.gen}<small> 格</small></strong><span>正常约 ${power.normal} 格</span></span><span class="power-battery"><small>🔋 电池余量</small><strong>${g.batt}<small> / ${batteryCap} 格</small></strong><span>能分配 ${g.pool} 格</span></span><span class="power-status"><b>${g.storm>0?'风暴影响发电':low?'发电偏低':'发电正常'}</b><small>${power.lost?`少了 ${power.lost} 格 · `:''}点这里找线索 →</small></span>`;
     $('#fieldStats').innerHTML=`<span>🫧 氧气 <b>${Math.round(g.o2)}</b></span><span>⚡ 可用电 <b>${g.pool}</b></span><span>☀ 辐射 <b>${g.dose.toFixed(1)} /25</b></span>`;
     $('#missionWeather').textContent=g.storm>0?'🌪 沙尘暴 · 留在仓内':g.today?.flareOut?'☀ 太阳活跃 · 注意辐射':'☀ 天气平静';
     const pending=model.tasks.filter(t=>t.phase!=='done');
@@ -227,6 +234,7 @@ window.Expedition = (() => {
     api=adapter;
     const root=document.createElement('div');root.id='expeditionUI';root.innerHTML=`<div id="fieldHud" hidden><aside class="mission-card"><span class="field-eyebrow" id="missionWeather"></span><h3>今天，去做点什么？</h3><ul id="missionTasks"></ul><p id="carriedSamples"></p></aside><div id="fieldStats" hidden></div><aside id="missionGuide" hidden></aside></div><div id="fieldControls" hidden><div id="objectiveDirection"></div><div id="homeDirection"></div><div class="camera-tools"><button id="fieldMap">基地地图</button><button id="cameraReset">镜头回正</button></div><div id="touchStick" aria-label="移动摇杆"><span></span></div><div class="field-help">WASD / 方向键移动 · 拖动画面转头</div><button id="nearbyAction" disabled></button></div><div id="fieldDialog" hidden></div>`;
     $('#frame').appendChild(root);
+    const powerCard=document.createElement('button');powerCard.id='cabinPower';powerCard.className='cabin-power';powerCard.setAttribute('aria-label','电量卡：查看今日发电、电池余量和故障原因');powerCard.onclick=()=>api.inspect('console',powerCard);$('#fieldHud').prepend(powerCard);
     const bookSkip=document.createElement('button');bookSkip.id='bookSkipGuide';bookSkip.className='text-button';bookSkip.textContent='跳过引导';bookSkip.hidden=true;bookSkip.onclick=()=>{model.skip();renderGuide();};$('#closeBook').before(bookSkip);
     $('#nearbyAction').onclick=interact;$('#fieldMap').onclick=showMap;$('#cameraReset').onclick=()=>{World.controller.yaw=0;World.controller.pitch=.38;World.controller.clear();};
     const stick=$('#touchStick');let touchId=null;
