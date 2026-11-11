@@ -74,11 +74,11 @@ button{font:inherit;color:inherit}
 #skip{position:absolute;z-index:16;right:24px;bottom:22px;opacity:0;pointer-events:none;transition:opacity .6s;color:var(--ink)}
 #skip.on{opacity:1;pointer-events:auto}
 
-/* 进入大气层：一圈圈套色光环 */
-#entry{position:absolute;inset:-30%;z-index:18;pointer-events:none;opacity:0;
-  background:repeating-radial-gradient(circle at 50% 50%,#efc172 0 3%,#e9a650 3% 6%,#dd843b 6% 9%,#cc6131 9% 12%,#b8452a 12% 15%,#963323 15% 18%)}
+/* Full-frame atmospheric haze hides the scene cut without revealing a layer edge. */
+#entry{position:absolute;inset:0;z-index:18;pointer-events:none;opacity:0;
+  background:#cc7549 radial-gradient(ellipse at 50% 45%,#f3c58a 0%,#d98c55 48%,#b64e35 100%)}
 #entry.on{animation:entry 2.6s ease-in-out forwards}
-@keyframes entry{0%{opacity:0;transform:scale(.2) rotate(0)}35%,55%{opacity:1;transform:scale(1.2) rotate(20deg)}100%{opacity:0;transform:scale(3) rotate(40deg)}}
+@keyframes entry{0%{opacity:0}30%,65%{opacity:1}100%{opacity:0}}
 
 /* ---------- HUD ---------- */
 #hud{position:absolute;inset:0;z-index:10;pointer-events:none;opacity:0;transition:opacity 1s}
