@@ -10,7 +10,7 @@ async page => {
   await page.locator('#consoleReturn').click();
   await page.getByRole('button',{name:'净水机：消耗电池净化饮用水'}).click();
   await page.getByRole('button',{name:/启动净水/}).click();
-  await page.locator('.item-close').click();
+  if(await page.locator('#itemPopover').isVisible())await page.locator('.item-close').click();
   await page.locator('#cabinPower').click();
   await page.locator('[data-k="food"] .mn').click();await page.locator('[data-k="o2"] .pl').click();
   if(await page.evaluate(()=>__dbg.G().alloc.o2)!==4)throw Error('mobile power allocation failed');

@@ -1,0 +1,108 @@
+/* The cabin has separate space for navigation, objects and status. */
+#frame.interior-view{background:var(--cream)}
+#frame.interior-view #habitatScene{top:94px;bottom:132px;left:116px;right:20px;background:none}
+#frame.interior-view .cabin-header{left:128px;right:24px;top:22px;gap:16px;color:var(--ink)}
+#frame.interior-view .cabin-header h1{font-family:var(--disp);font-size:26px;letter-spacing:.08em;margin:5px 0 0;color:var(--ink)}
+#frame.interior-view .cabin-header p{display:none}
+#frame.interior-view .cabin-kicker{color:#685743}
+#frame.interior-view .scene-switch{background:var(--cream);border:2px solid var(--ink);border-radius:0;box-shadow:4px 4px 0 var(--ink);backdrop-filter:none;padding:3px}
+#frame.interior-view .scene-switch button{min-height:40px;color:var(--ink);border-radius:0;font-size:12px;font-weight:700}
+#frame.interior-view .scene-switch button[aria-pressed=true]{background:var(--mustard);box-shadow:none;color:var(--ink)}
+#frame.interior-view .scene-switch button:hover{background:#e9d5a7}
+#frame.interior-view .notebook-shelf{left:24px;top:110px;transform:none;gap:14px}
+#frame.interior-view .notebook-shelf .shelf-book{width:78px;height:94px;background:var(--cream);border:2px solid var(--ink);border-radius:0;box-shadow:4px 4px 0 var(--ink);backdrop-filter:none;color:var(--ink)}
+#frame.interior-view .shelf-book svg{stroke:var(--ink);opacity:1;width:24px;height:27px}
+#frame.interior-view .shelf-book small,#frame.interior-view .shelf-count{color:#685743}
+#frame.interior-view .shelf-book b{font-size:11px;font-weight:700;letter-spacing:0}
+#frame.interior-view .shelf-book.active{background:#edca82;transform:none}
+#frame.interior-view .shelf-book:hover{transform:translateY(-2px);background:#f5e4bd}
+#frame.interior-view .shelf-book::before,#frame.interior-view .shelf-book::after{display:none}
+#frame.interior-view .mission-card,#frame.interior-view #crewSpeech,#frame.interior-view #roomHint{display:none}
+#frame.interior-view #cabinDrawing{min-width:1000px}
+#frame.interior-view .object-caption rect{fill:var(--cream);stroke:var(--ink);stroke-width:1.5;opacity:1;rx:2}
+#frame.interior-view .object-caption text{font-weight:700;letter-spacing:0;fill:var(--ink);font-size:12px}
+#cabinDashboard{position:absolute;left:128px;right:24px;bottom:24px;max-width:1260px;margin-inline:auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(350px,440px);gap:16px;z-index:24;color:var(--ink)}
+#frame:not(.interior-view) #cabinDashboard{display:none}
+#cabinDashboard #survivalHUD{position:static;inset:auto;transform:none;width:auto;max-width:none;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));padding:10px 8px;gap:0;border:2px solid var(--ink);border-radius:0;background:var(--cream);box-shadow:4px 4px 0 var(--ink);backdrop-filter:none;opacity:1}
+#cabinDashboard #survivalHUD button{padding:2px 6px;border-color:#2b1a2438;color:var(--ink);gap:0}
+#cabinDashboard #survivalHUD button>span{gap:5px;font-size:11px;font-weight:700;color:var(--ink);letter-spacing:0}
+#cabinDashboard #survivalHUD b{font:700 23px/1 var(--j-mono);color:var(--ink)}
+#cabinDashboard #survivalHUD b small{color:#685743;font-size:10px}
+#cabinDashboard #survivalHUD button.low b{color:#a13f29}
+#cabinDashboard #survivalHUD button>span::before{content:"";height:3px;width:22px;background:var(--green);display:block}
+#cabinDashboard #survivalHUD [data-item=water]>span::before{background:var(--teal)}
+#cabinDashboard #survivalHUD [data-item=medicine]>span::before{background:var(--orange)}
+#cabinDashboard #survivalHUD [data-item=crew]>span::before{background:var(--mustard)}
+#cabinDashboard #survivalHUD [data-item=calendar]>span::before{background:var(--navy)}
+#cabinDashboard #cabinPower{position:static;inset:auto;width:100%;height:100%;transform:none;grid-template-columns:1fr 1fr 1.1fr;gap:12px;padding:10px 14px;background:var(--cream);color:var(--ink);border:2px solid var(--ink);border-radius:0;box-shadow:4px 4px 0 var(--ink)}
+#cabinDashboard #cabinPower>span+span{border-color:#2b1a2438;padding-left:12px}
+#cabinDashboard #cabinPower strong{font:700 23px/1.1 var(--j-mono)}
+#cabinDashboard #cabinPower small,#cabinDashboard #cabinPower .power-generation>span{font-size:10px}
+#cabinDashboard #cabinPower .power-status b{font-size:13px;color:var(--ink)}
+#cabinDashboard #cabinPower.low .power-status b{color:#a13f29}
+#cabinDashboard #cabinPower:hover{background:#f5e4bd}
+#frame.notebook-open #cabinDashboard{visibility:hidden;pointer-events:none}
+#frame.interior-view.tutorial-focused #habitatScene{top:200px}
+#frame.interior-view #missionGuide:not([hidden]){top:96px;left:128px;right:24px;bottom:auto;width:auto;padding:10px 14px;border-radius:0;border:2px solid var(--ink);box-shadow:4px 4px 0 var(--ink);background:var(--cream);display:grid;grid-template-columns:minmax(160px,.8fr) minmax(200px,1.3fr) auto;gap:3px 15px;color:var(--ink)}
+#frame.interior-view #missionGuide>.field-eyebrow{grid-column:1;grid-row:1;font-size:10px;color:#685743}
+#frame.interior-view #missionGuide h3{grid-column:1;grid-row:2;font-size:17px;margin:0;color:var(--ink)}
+#frame.interior-view #missionGuide p{grid-column:2;grid-row:1/3;font-size:12px;line-height:1.7;margin:0;align-self:center}
+#frame.interior-view #missionGuide>div{grid-column:3;grid-row:1/3;align-self:center}
+.item-popover,.daily-event-card,.field-card,.mission-card,#missionGuide{background:var(--cream);border:2px solid var(--ink);border-radius:0;box-shadow:4px 4px 0 #2b1a2466;color:var(--ink);backdrop-filter:none}
+.item-heading h2,.item-heading>b,.item-popover>p,.daily-event-card h2,.daily-event-card .event-description,.field-description,.field-card p{color:var(--ink)}
+.item-heading{margin:15px 0}
+.item-actions button,.item-actions button:first-child:not(:disabled),.event-option,.field-button{background:var(--cream);color:var(--ink);border:2px solid var(--ink);border-radius:0;box-shadow:2px 2px 0 #2b1a2433}
+.item-actions button small,.item-actions button:first-child:not(:disabled) small{color:#685743}
+.item-actions button:hover,.event-option:hover,.field-button:hover{background:#f5e4bd}
+.field-button.primary{background:var(--mustard);color:var(--ink);border-color:var(--ink)}
+.task-index{font:700 12px var(--j-mono);color:var(--ink)}
+.departure-tasks{border-top:1px solid #2b1a2440;border-bottom:1px solid #2b1a2440;margin:14px 0;padding:12px 0}
+.departure-tasks>b{font-size:13px}
+.departure-tasks ul{padding-left:19px;margin:8px 0 0}
+.departure-tasks li{margin-bottom:8px;font-size:13px}
+.departure-tasks li p{font-size:12px;line-height:1.6;margin:3px 0 0}
+.sample-rock{width:170px;height:85px}
+.connector svg{width:36px;height:36px;pointer-events:none}
+.brand-mark:empty,.empty-archive-mark:empty{display:none}
+@media(max-width:1100px) and (min-width:701px){
+  #cabinDashboard{grid-template-columns:minmax(0,1fr) 350px;left:112px;right:20px;gap:12px}
+  #frame.interior-view .cabin-header{left:112px;right:20px}
+  #frame.interior-view #missionGuide:not([hidden]){left:112px;right:20px;grid-template-columns:150px 1fr;gap:3px 12px}
+  #frame.interior-view #missionGuide>div{grid-column:1/-1;grid-row:3;justify-content:flex-end}
+  #frame.interior-view.tutorial-focused #habitatScene{top:244px}
+  #cabinDashboard #survivalHUD b{font-size:19px}
+  #cabinDashboard #survivalHUD button>span{font-size:10px}
+}
+@media(max-width:700px){
+  #frame.interior-view .cabin-header{left:12px;right:12px;top:14px;gap:8px;align-items:center}
+  #frame.interior-view .cabin-header h1{font-size:20px;letter-spacing:0;white-space:nowrap}
+  #frame.interior-view .cabin-kicker{font-size:7px;letter-spacing:0}
+  #frame.interior-view .scene-switch{padding:2px;gap:0;box-shadow:3px 3px 0 var(--ink)}
+  #frame.interior-view .scene-switch button{font-size:9px;padding:6px;min-height:38px}
+  #frame.interior-view #habitatScene{top:114px;bottom:176px;left:0;right:0}
+  #frame.interior-view .room-scroll{overflow:auto}
+  #frame.interior-view #cabinDrawing{min-width:1120px;min-height:460px}
+  #frame.interior-view .notebook-shelf{left:12px;top:74px;right:12px;transform:none;flex-direction:row;gap:12px}
+  #frame.interior-view .notebook-shelf .shelf-book{width:auto;height:28px;min-height:28px;display:flex;flex-direction:row;padding:3px 9px;gap:5px;box-shadow:2px 2px 0 var(--ink)}
+  #frame.interior-view .shelf-book svg,#frame.interior-view .shelf-book small,#frame.interior-view .shelf-count,#frame.interior-view .shelf-signal{display:none}
+  #frame.interior-view .shelf-book b{font-size:10px}
+  #cabinDashboard{left:12px;right:12px;bottom:12px;grid-template-columns:1fr;gap:8px}
+  #cabinDashboard #survivalHUD{padding:6px 4px;box-shadow:3px 3px 0 var(--ink)}
+  #cabinDashboard #survivalHUD button{min-height:48px;padding:2px 5px}
+  #cabinDashboard #survivalHUD button>span{font-size:10px;gap:3px}
+  #cabinDashboard #survivalHUD button>span::before{display:none}
+  #cabinDashboard #survivalHUD b{font-size:19px}
+  #cabinDashboard #survivalHUD b small{font-size:8px}
+  #cabinDashboard #cabinPower{padding:7px 10px;gap:8px;box-shadow:3px 3px 0 var(--ink);min-height:67px}
+  #cabinDashboard #cabinPower>span+span{padding-left:8px}
+  #cabinDashboard #cabinPower strong{font-size:20px}
+  #cabinDashboard #cabinPower small,#cabinDashboard #cabinPower .power-generation>span{font-size:9px}
+  #cabinDashboard #cabinPower .power-status b{font-size:12px}
+  #frame.interior-view.tutorial-focused #habitatScene{top:257px}
+  #frame.interior-view #missionGuide:not([hidden]){top:111px;left:12px;right:12px;padding:9px 11px;display:block}
+  #frame.interior-view #missionGuide h3{font-size:16px;margin:3px 0}
+  #frame.interior-view #missionGuide p{font-size:11px;line-height:1.5;margin:4px 0 8px}
+  #frame.interior-view #missionGuide>div{gap:8px;flex-wrap:nowrap}
+  #frame.interior-view #missionGuide .field-button{min-height:34px;padding:6px 10px;font-size:11px}
+  #frame.interior-view #missionGuide .text-button{font-size:11px}
+}

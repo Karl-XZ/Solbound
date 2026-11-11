@@ -17,6 +17,12 @@ window.Expedition = (() => {
     sleep: ['点击床结束今天', '净水和维修已完成。点击床。确认后进入第 2 天。', 'bed', '查看床']
   };
   const costText = c => [c.o2 ? `氧气 −${c.o2}` : '', c.dose ? `辐射 +${Math.round(c.dose * 100) / 100}` : '', c.power ? `可用电 −${c.power}` : ''].filter(Boolean).join(' · ') || '不额外消耗物资';
+  function taskInstruction(t) {
+    if(t.kind==='survey')return '走到火箭旁的黄色标记。扫描地面并保存结果。科学 +6。';
+    if(t.kind==='clean')return '走到太阳能板旁。擦掉板面的灰尘。';
+    if(t.kind==='repair')return t.target==='o2'?'走到制氧机旁。接回传感器接头。':'走到太阳能板旁。接回供电接头。';
+    return '走到岩石旁。扫描岩石并收集岩样。带回舱后分析。';
+  }
   function paused() { return !api.canAct() || activity || choiceOpen || !$('#notebook').hidden || !$('#itemPopover').hidden || document.hidden; }
   function refresh() { api.refresh(); render(api.state()); }
   function notify(action) { model.notify(action); renderGuide(); }
@@ -77,7 +83,7 @@ window.Expedition = (() => {
     maintenance('clean','solar',g=>g.panelEff<.98,'清扫积灰的太阳能板',{o2:3,dose:.2},()=>api.effect(()=>{g.panelEff=1;g.o2-=3;g.dose+=.2;g.doseParts.eva+=.2;World.fx('clean');},'清扫完成。清洁度恢复 100%。氧气 −3。辐射 +0.2。'));
     maintenance('repair','solar',g=>g.damaged>0,'修复受损太阳能板',{o2:4,dose:.3},()=>api.effect(()=>{g.damaged=0;g.o2-=4;g.dose+=.3;g.doseParts.eva+=.3;World.fx('repair');},'太阳能板已修好。氧气 −4。辐射 +0.3。'));
     maintenance('repair','o2',g=>g.o2Fault>0,'修复制氧机传感器',{power:3},()=>api.effect(()=>{g.today.poolPenalty+=3;g.o2Fault=0;g.o2FaultDays=0;g.o2Mul=1;g.o2MulDays=0;World.fx('repair');},'传感器已修好。今天可用电 −3。制氧效率恢复。'));
-    addTask({id:`survey-${g.sol}`,title:'观察今日地貌',kind:'survey',target:'survey',daily:true,cost:{},complete:()=>api.effect(()=>{g.sci+=6;g.evaCount++;},'地貌观察已完成。科学 +6。今天不能重复领奖。')});
+    addTask({id:`survey-${g.sol}`,title:'扫描火箭旁的地面',kind:'survey',target:'survey',daily:true,cost:{},complete:()=>api.effect(()=>{g.sci+=6;g.evaCount++;},'地面扫描结果已保存。科学 +6。今天不能重复领奖。')});
     render(g);
   }
   function inspectPower() {
@@ -89,7 +95,9 @@ window.Expedition = (() => {
     if(!api.canAct() || activity || choiceOpen)return;
     if(model.guide.active && model.step!=='depart'){Habitat.toast(guide[model.step][0]);return;}
     const g=api.state(), blocked=api.blockReason(), cost={o2:3,dose:.25+g.today.flareOut};
-    showChoice('出舱检查', `<div class="departure-weather ${blocked?'warning':''}">${blocked?'⛔ '+blocked:g.today.flareOut?'☀️ 发生太阳风暴。今天出舱会增加辐射。':'☀️ 天气适合出发'}</div><p>本次消耗：<b>${costText(cost)}</b></p>${g.conjRisk>0?'<p class="departure-weather warning">日凌会影响通信。每次出舱有约 1/3 的概率发生漏气。漏气会额外消耗 6 点氧气。</p>':''}<p>氧气 ${Math.round(g.o2)} → ${Math.round((g.o2-3)*10)/10}；累计辐射 ${g.dose.toFixed(2)} → ${(g.dose+cost.dose).toFixed(2)} / 25 mSv。</p><p class="field-note">出舱只收费一次。移动和阅读不额外消耗氧气。这些数值是游戏规则。</p>`,[
+    const jobs=model.tasks.filter(t=>t.phase!=='done' && (!model.guide.active || t.kind!=='survey'));
+    const jobsHTML=jobs.length?`<div class="departure-tasks"><b>本次可做的工作</b><ul>${jobs.map(t=>`<li><strong>${t.title}</strong><p>${taskInstruction(t)}</p></li>`).join('')}</ul></div>`:'<p>今天的工作已完成。你仍可出舱查看基地。</p>';
+    showChoice('出舱检查', `<div class="departure-weather ${blocked?'warning':''}">${blocked?' '+blocked:g.today.flareOut?' 发生太阳风暴。今天出舱会增加辐射。':' 天气适合出发'}</div>${jobsHTML}<p>本次消耗：<b>${costText(cost)}</b></p>${g.conjRisk>0?'<p class="departure-weather warning">日凌会影响通信。每次出舱有约 1/3 的概率发生漏气。漏气会额外消耗 6 点氧气。</p>':''}<p>氧气 ${Math.round(g.o2)} → ${Math.round((g.o2-3)*10)/10}；累计辐射 ${g.dose.toFixed(2)} → ${(g.dose+cost.dose).toFixed(2)} / 25 mSv。</p><p class="field-note">出舱只收费一次。移动和阅读不额外消耗氧气。这些数值是游戏规则。</p>`,[
       {label:blocked || (!ExpeditionModel.canAfford(g,cost)?'氧气不足或辐射过高':'出舱'),disabled:!!blocked || !ExpeditionModel.canAfford(g,cost),run:()=>{
         if(api.blockReason() || !ExpeditionModel.canAfford(g,cost))return;
         const actual=ExpeditionModel.departureCost(g,Math.random());
@@ -122,11 +130,11 @@ window.Expedition = (() => {
     model.start(t.id);activity=t;World.setPlayerInput(false);
     const type=t.kind;
     let art='';
-    if(type==='clean') art=`<div class="clean-board" id="cleanBoard" role="group" aria-label="在太阳能板上拖动刷子擦灰"><div class="panel-grid"></div>${Array.from({length:18},(_,i)=>`<div class="dust-patch" data-dust="${i}" style="left:${i%6/6*100}%;top:${Math.floor(i/6)/3*100}%"></div>`).join('')}<span class="brush-hint">拖动刷子清扫 🧹</span></div><label class="work-progress">清洁进度 <progress id="workProgress" max="18" value="0"></progress></label>`;
-    else if(type==='repair') art=`<div class="repair-board"><div class="repair-machine"><span class="repair-lamp"></span><b>${t.target==='o2'?'传感器接头':'供电接头'}</b><div class="wire left-wire"></div><button class="connector" id="looseConnector" aria-label="拿起松脱接头">🔌<small>松脱的接头</small></button><button class="socket" id="repairSocket" disabled aria-label="把接头接回接口">◉<small>接回这里</small></button></div></div><p id="repairInstruction">① 点击松脱的接头。</p><button class="field-button" id="fasten" disabled>③ 拧紧固定环</button>`;
-    else art=`<div class="sample-board"><span class="sample-rock">🪨</span><div class="scan-line"></div><span id="sampleVisual">尚未扫描</span></div><p id="sampleInstruction">${type==='survey'?'点击「扫描地貌」检查地貌。':'点击「扫描岩石」检查岩样。'}</p><button class="field-button" id="scanRock">① 扫描${type==='survey'?'地貌':'岩石'}</button><button class="field-button" id="collectRock" disabled>② ${type==='survey'?'记录观察':'将岩样装进密封盒'}</button>`;
+    if(type==='clean') art=`<div class="clean-board" id="cleanBoard" role="group" aria-label="在太阳能板上拖动刷子擦灰"><div class="panel-grid"></div>${Array.from({length:18},(_,i)=>`<div class="dust-patch" data-dust="${i}" style="left:${i%6/6*100}%;top:${Math.floor(i/6)/3*100}%"></div>`).join('')}<span class="brush-hint">拖动刷子清扫 </span></div><label class="work-progress">清洁进度 <progress id="workProgress" max="18" value="0"></progress></label>`;
+    else if(type==='repair') art=`<div class="repair-board"><div class="repair-machine"><span class="repair-lamp"></span><b>${t.target==='o2'?'传感器接头':'供电接头'}</b><div class="wire left-wire"></div><button class="connector" id="looseConnector" aria-label="拿起松脱接头"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M16 5v12m16-12v12M11 17h26v11q0 10-13 10T11 28Zm13 21v9" fill="none" stroke="currentColor" stroke-width="4"/></svg><small>松脱的接头</small></button><button class="socket" id="repairSocket" disabled aria-label="把接头接回接口">◉<small>接回这里</small></button></div></div><p id="repairInstruction">① 点击松脱的接头。</p><button class="field-button" id="fasten" disabled>③ 拧紧固定环</button>`;
+    else art=`<div class="sample-board"><svg class="sample-rock" viewBox="0 0 160 80" aria-hidden="true"><path d="m10 64 20-32 43-17 39 9 37 40Z" fill="#bb7650" stroke="#2b1a24" stroke-width="4"/><path d="m31 51 38-15 39 7m-66 20 43-12 38 8" fill="none" stroke="#e4ac70" stroke-width="4"/></svg><div class="scan-line"></div><span id="sampleVisual">尚未扫描</span></div><p id="sampleInstruction">${type==='survey'?'点击「扫描地面」检查地面。':'点击「扫描岩石」检查岩样。'}</p><button class="field-button" id="scanRock">① 扫描${type==='survey'?'地面':'岩石'}</button><button class="field-button" id="collectRock" disabled>② ${type==='survey'?'保存扫描结果':'将岩样装进密封盒'}</button>`;
     $('#fieldDialog').hidden=false;
-    $('#fieldDialog').innerHTML=`<section class="field-card work-card" role="dialog" aria-modal="true" aria-labelledby="fieldTitle"><span class="field-eyebrow">现场工作 · ${type==='clean'?'清扫':type==='repair'?'维修':'探索'}</span><h2 id="fieldTitle">${t.title}</h2><p class="field-note">完成时：${costText(t.cost)}。暂停不会扣除资源。</p>${art}<div class="field-choices"><button class="field-button primary" id="finishWork" disabled>完成工作 ✓</button><button class="field-button" id="cancelWork">暂停工作</button></div></section>`;
+    $('#fieldDialog').innerHTML=`<section class="field-card work-card" role="dialog" aria-modal="true" aria-labelledby="fieldTitle"><span class="field-eyebrow">现场工作 · ${type==='clean'?'清扫':type==='repair'?'维修':'探索'}</span><h2 id="fieldTitle">${t.title}</h2><p class="field-note">完成时：${costText(t.cost)}。暂停不会扣除资源。</p>${art}<div class="field-choices"><button class="field-button primary" id="finishWork" disabled>完成工作 </button><button class="field-button" id="cancelWork">暂停工作</button></div></section>`;
     $('#cancelWork').onclick=()=>{model.cancel(t.id);activity=null;$('#fieldDialog').hidden=true;render(api.state());};
     $('#finishWork').onclick=()=>finishWork(t);
     const done=()=>{$('#finishWork').disabled=false;};
@@ -145,8 +153,8 @@ window.Expedition = (() => {
       $('#repairSocket').onclick=()=>{$('#repairSocket').classList.add('connected');$('#fasten').disabled=false;$('#repairInstruction').textContent='接头已接好。点击「拧紧固定环」。';};
       $('#fasten').onclick=()=>{$('.repair-lamp').classList.add('working');$('#repairInstruction').textContent='接头已固定。指示灯已亮起。';$('#fasten').disabled=true;done();};
     } else {
-      $('#scanRock').onclick=()=>{$('#scanRock').disabled=true;$('.sample-board').classList.add('scanned');$('#sampleVisual').textContent=type==='survey'?'地貌扫描完成':'找到了可采集的岩样';$('#collectRock').disabled=false;$('#sampleInstruction').textContent=type==='survey'?'把这次观察记入档案。':'请将岩样装入密封盒。回舱后才能分析。';};
-      $('#collectRock').onclick=()=>{$('#collectRock').disabled=true;$('.sample-board').classList.add('collected');$('#sampleVisual').textContent=type==='survey'?'观察已记录':'📦 岩样已密封';done();};
+      $('#scanRock').onclick=()=>{$('#scanRock').disabled=true;$('.sample-board').classList.add('scanned');$('#sampleVisual').textContent=type==='survey'?'地面扫描完成':'找到了可采集的岩样';$('#collectRock').disabled=false;$('#sampleInstruction').textContent=type==='survey'?'点击「保存扫描结果」。':'请将岩样装入密封盒。回舱后才能分析。';};
+      $('#collectRock').onclick=()=>{$('#collectRock').disabled=true;$('.sample-board').classList.add('collected');$('#sampleVisual').textContent=type==='survey'?'扫描结果已保存':' 岩样已密封';done();};
     }
     $('#fieldDialog button:not(:disabled)')?.focus({preventScroll:true});
   }
@@ -179,7 +187,7 @@ window.Expedition = (() => {
     if(!api.canAct() || choiceOpen)return;
     if(model.guide.active && model.step!=='sleep'){Habitat.toast(guide[model.step][0]);return;}
     const g=api.state(),p=api.preview();
-    showChoice(`结束第 ${g.sol} 天`,`<p>${g.sol<30?`确认后进入第 ${g.sol+1} 天。`:'确认后结束任务。'}设备会按分电方案运行。</p><p>预计资源如下：</p><div class="night-ledger"><span>氧气 <b>${Math.max(0,g.o2+p.o2).toFixed(1)}</b></span><span>食物 <b>${Math.max(0,g.food+p.food).toFixed(1)}</b></span><span>饮水 <b>${Math.max(0,g.water-2.5).toFixed(1)}</b></span><span>科学 <b>${(g.sci+p.sci).toFixed(1)}</b></span></div><p>${p.o2<0?'⚠️ 今晚氧气会减少。请给制氧机增加电量。':'制氧电量已分配。'} 温室需要 3 天才能收获。</p>`,[
+    showChoice(`结束第 ${g.sol} 天`,`<p>${g.sol<30?`确认后进入第 ${g.sol+1} 天。`:'确认后结束任务。'}设备会按分电方案运行。</p><p>预计资源如下：</p><div class="night-ledger"><span>氧气 <b>${Math.max(0,g.o2+p.o2).toFixed(1)}</b></span><span>食物 <b>${Math.max(0,g.food+p.food).toFixed(1)}</b></span><span>饮水 <b>${Math.max(0,g.water-2.5).toFixed(1)}</b></span><span>科学 <b>${(g.sci+p.sci).toFixed(1)}</b></span></div><p>${p.o2<0?' 今晚氧气会减少。请给制氧机增加电量。':'制氧电量已分配。'} 温室需要 3 天才能收获。</p>`,[
       {label:'确认结束今天',run:()=>{notify('sleep');api.endDay();}},
       {label:'返回电力台',run:()=>{api.plan();notify('console');}}
     ]);
@@ -224,12 +232,12 @@ window.Expedition = (() => {
     const power=api.powerStatus(), low=power.lost>0 || g.storm>0, batteryCap=8+g.battBonus;
     $('#cabinPower').hidden=outside;$('#cabinPower').dataset.battery=String(g.batt);$('#cabinPower').dataset.loss=String(power.lost);$('#cabinPower').classList.toggle('low',low);
     $('#cabinPower').setAttribute('aria-label',`电量卡。今日发电 ${g.gen} 格。正常约 ${power.normal} 格。电池余量 ${g.batt} 格。可分配 ${g.pool} 格。${low?'发电偏低。':''}点击查看故障和用电。`);
-    $('#cabinPower').innerHTML=`<span class="power-generation"><small>⚡ 今日发电</small><strong>${g.gen}<small> 格</small></strong><span>正常约 ${power.normal} 格</span></span><span class="power-battery"><small>🔋 电池余量</small><strong>${g.batt}<small> / ${batteryCap} 格</small></strong><span>能分配 ${g.pool} 格</span></span><span class="power-status"><b>${g.storm>0?'风暴影响发电':low?'发电偏低':'发电正常'}</b><small>${power.lost?`少了 ${power.lost} 格 · `:''}点击查看故障 →</small></span>`;
-    $('#fieldStats').innerHTML=`<span>🫧 氧气 <b>${Math.round(g.o2)}</b></span><span>⚡ 发电 <b>${g.gen}</b> · 可用 <b>${g.pool}</b></span><span>☀ 辐射 <b>${g.dose.toFixed(1)} /25</b></span>`;
-    $('#missionWeather').textContent=g.storm>0?'🌪 沙尘暴 · 留在仓内':g.today?.flareOut?'☀ 发生太阳风暴 · 注意辐射':'☀ 天气正常';
+    $('#cabinPower').innerHTML=`<span class="power-generation"><small>今日发电</small><strong>${g.gen}<small> 格</small></strong><span>正常约 ${power.normal} 格</span></span><span class="power-battery"><small>电池余量</small><strong>${g.batt}<small> / ${batteryCap} 格</small></strong><span>可分配 ${g.pool} 格</span></span><span class="power-status"><b>${g.storm>0?'风暴影响发电':low?'发电偏低':'发电正常'}</b><small>打开控制台 →</small></span>`;
+    $('#fieldStats').innerHTML=`<span> 氧气 <b>${Math.round(g.o2)}</b></span><span> 发电 <b>${g.gen}</b> · 可用 <b>${g.pool}</b></span><span> 辐射 <b>${g.dose.toFixed(1)} /25</b></span>`;
+    $('#missionWeather').textContent=g.storm>0?' 沙尘暴 · 留在仓内':g.today?.flareOut?' 发生太阳风暴 · 注意辐射':' 天气正常';
     const pending=model.tasks.filter(t=>t.phase!=='done');
-    $('#missionTasks').innerHTML=pending.slice(0,5).map(t=>`<li><span>${t.kind==='repair'?'🔧':t.kind==='clean'?'🧹':'🔎'}</span>${t.title}<small>${outside?'走到黄色标记旁':'从舱门出舱'}</small></li>`).join('') || '<li>✓ 今日舱外工作已完成</li>';
-    $('#carriedSamples').textContent=model.samples.some(s=>s.status==='carried')?'📦 背包有岩样。请带回舱。':model.samples.some(s=>s.status==='stored')?'🔬 实验台有待分析岩样。':'';
+    $('#missionTasks').innerHTML=pending.slice(0,5).map((t,i)=>`<li><span class="task-index">${i+1}</span>${t.title}<small>${taskInstruction(t)}</small></li>`).join('') || '<li> 今日舱外工作已完成</li>';
+    $('#carriedSamples').textContent=model.samples.some(s=>s.status==='carried')?' 背包有岩样。请带回舱。':model.samples.some(s=>s.status==='stored')?' 实验台有待分析岩样。':'';
     Habitat.samples?.(model.samples);
     renderGuide();
   }
@@ -258,7 +266,7 @@ window.Expedition = (() => {
       const door=World.getSite('door'),angle=Math.atan2(door.x-p.x,door.z-p.z)-p.yaw;
       $('#homeDirection').innerHTML=`<span style="display:inline-block;transform:rotate(${-angle}rad)">↓</span> 舱门 ${Math.round(Math.hypot(door.x-p.x,door.z-p.z))} 米`;
       const target=guideTask() || model.tasks.find(t=>t.phase!=='done');
-      if(target){const s=World.getSite(target.target),a=Math.atan2(s.x-p.x,s.z-p.z)-p.yaw;$('#objectiveDirection').innerHTML=`<span style="display:inline-block;transform:rotate(${-a}rad)">↓</span> ${target.title} · ${Math.round(Math.hypot(s.x-p.x,s.z-p.z))} 米`;}else $('#objectiveDirection').textContent='✓ 今日探索已完成。请回舱。';
+      if(target){const s=World.getSite(target.target),a=Math.atan2(s.x-p.x,s.z-p.z)-p.yaw;$('#objectiveDirection').innerHTML=`<span style="display:inline-block;transform:rotate(${-a}rad)">↓</span> ${target.title} · ${Math.round(Math.hypot(s.x-p.x,s.z-p.z))} 米`;}else $('#objectiveDirection').textContent=' 今日探索已完成。请回舱。';
       if(api.blockReason() && !pause && !hazardNotified){hazardNotified=true;showChoice('天气已变化。请回舱。','<p>天气不允许出舱。请返回生活舱。</p>',[{label:'立即回舱',run:()=>returnHome(true)},{label:'步行回舱',run:()=>{}}]);}
     }
     requestAnimationFrame(loop);
@@ -267,7 +275,7 @@ window.Expedition = (() => {
     api=adapter;
     const root=document.createElement('div');root.id='expeditionUI';root.innerHTML=`<div id="fieldHud" hidden><aside class="mission-card"><span class="field-eyebrow" id="missionWeather"></span><h3>今日任务</h3><ul id="missionTasks"></ul><p id="carriedSamples"></p></aside><div id="fieldStats" hidden></div><aside id="missionGuide" hidden></aside></div><div id="fieldControls" hidden><div id="objectiveDirection"></div><div id="homeDirection"></div><div class="camera-tools"><button id="fieldMap">任务位置</button><button id="cameraReset">重置视角</button></div><div id="touchStick" aria-label="移动摇杆"><span></span></div><div class="field-help">WASD / 方向键：移动 · 拖动画面：转动视角</div><button id="nearbyAction" disabled></button></div><div id="fieldDialog" hidden></div>`;
     $('#frame').appendChild(root);
-    const powerCard=document.createElement('button');powerCard.id='cabinPower';powerCard.className='cabin-power';powerCard.setAttribute('aria-label','电量卡：查看今日发电、电池余量和故障原因');powerCard.onclick=()=>api.inspect('console',powerCard);$('#fieldHud').prepend(powerCard);
+    const powerCard=document.createElement('button');powerCard.id='cabinPower';powerCard.className='cabin-power';powerCard.setAttribute('aria-label','电量卡：查看今日发电、电池余量和故障原因');powerCard.onclick=()=>api.inspect('console',powerCard);$('#cabinPowerMount').append(powerCard);
     const bookSkip=document.createElement('button');bookSkip.id='bookSkipGuide';bookSkip.className='text-button';bookSkip.textContent='跳过引导';bookSkip.hidden=true;bookSkip.onclick=()=>{model.skip();renderGuide();};$('#closeBook').before(bookSkip);
     $('#nearbyAction').onclick=interact;$('#fieldMap').onclick=showMap;$('#cameraReset').onclick=()=>{World.controller.yaw=0;World.controller.pitch=.38;World.controller.clear();};
     const stick=$('#touchStick');let touchId=null;

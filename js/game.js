@@ -132,10 +132,10 @@
     $('#journalHistory').innerHTML = entries.length ? entries.map(d => {
       const notes = d.notes || [];
       const chunks = Array.from({ length: Math.max(1, Math.ceil(notes.length / 2)) }, (_, i) => notes.slice(i * 2, i * 2 + 2));
-      const records = chunks.map((chunk, i) => `<section class="book-page archive-page" data-book="archive" data-sheet="archive-${d.sol}-${i}" data-label="SOL ${String(d.sol).padStart(2, '0')} · 事件记录" hidden><div class="page-eyebrow">事件档案 / ${d.pending ? '今日已记录' : '日终归档'}</div><h2>第 ${d.sol} 日${i ? ' · 续页' : ' 操作记录'}</h2>${!i && !notes.length ? d.decisions.map(c => `<div class="archived-decision"><span>${c.title}</span><b>✓ ${c.choice}</b></div>`).join('') : ''}${chunk.length ? `<ul class="summary-notes">${chunk.map(n => `<li>${n}</li>`).join('')}</ul>` : `<p class="entry-body">${d.pending ? '操作已记录。结束当天后可查看物资和分电记录。' : '今天没有特殊事件。基地按计划运转。'}</p>`}</section>`).join('');
+      const records = chunks.map((chunk, i) => `<section class="book-page archive-page" data-book="archive" data-sheet="archive-${d.sol}-${i}" data-label="SOL ${String(d.sol).padStart(2, '0')} · 事件记录" hidden><div class="page-eyebrow">事件档案 / ${d.pending ? '今日已记录' : '日终归档'}</div><h2>第 ${d.sol} 日${i ? ' · 续页' : ' 操作记录'}</h2>${!i && !notes.length ? d.decisions.map(c => `<div class="archived-decision"><span>${c.title}</span><b> ${c.choice}</b></div>`).join('') : ''}${chunk.length ? `<ul class="summary-notes">${chunk.map(n => `<li>${n}</li>`).join('')}</ul>` : `<p class="entry-body">${d.pending ? '操作已记录。结束当天后可查看物资和分电记录。' : '今天没有特殊事件。基地按计划运转。'}</p>`}</section>`).join('');
       if (d.pending) return records;
       return records + `<section class="book-page archive-page" data-book="archive" data-sheet="archive-${d.sol}-resources" data-label="SOL ${String(d.sol).padStart(2, '0')} · 资源与分配" hidden><div class="page-eyebrow">资源记录</div><h2>第 ${d.sol} 日 · 物资账本</h2><div class="archive-resources"><span>氧气<b>${Math.round(d.o2)}<small>%</small></b></span><span>食物<b>${Math.round(d.food)}<small>%</small></b></span><span>科学成果<b>${f1(d.sci)}</b></span><span>累计辐射<b>${f1(d.dose)}<small> mSv</small></b></span></div><div class="allocation-record"><span>当天的电力安排</span>${Object.entries(d.alloc).map(([k, v]) => `<p>${SLOTS.find(s => s.k === k).name}<b>${v} 格</b></p>`).join('')}</div><p class="page-note">饮水 ${f1(d.water ?? 0)} · 药品 ${d.meds ?? 0} · 心情 ${Math.round(d.morale ?? 0)}</p></section>`;
-    }).join('') : `<section class="book-page archive-page" data-book="archive" data-sheet="archive-empty" data-label="事件档案" hidden><div class="page-eyebrow">事件档案 / 000</div><h2>暂无历史记录</h2><p class="entry-body">这里保存每天的操作、资源和分电方案。<br><br>结束第 1 天后可查看记录。</p><div class="empty-archive-mark" aria-hidden="true">✦</div></section>`;
+    }).join('') : `<section class="book-page archive-page" data-book="archive" data-sheet="archive-empty" data-label="事件档案" hidden><div class="page-eyebrow">事件档案 / 000</div><h2>暂无历史记录</h2><p class="entry-body">这里保存每天的操作、资源和分电方案。<br><br>结束第 1 天后可查看记录。</p><div class="empty-archive-mark" aria-hidden="true"></div></section>`;
     archiveIndex = Math.min(archiveIndex, Math.max(0, $('#journalHistory').children.length - 1));
   }
   let rng = Math.random;
@@ -475,11 +475,11 @@
     const notes = G.today.notes;
     $('#journalChoices').innerHTML = `<div class="page-eyebrow">今日操作</div><h2>今日操作记录</h2><p class="page-subtitle">已记录 ${notes.length} 次操作。结束当天后可查看完整记录。</p><ul class="summary-notes">${notes.slice(-3).map(n => `<li>${n}</li>`).join('')}</ul>`;
   }
-  function careForCrew(key, allowed, change, note, item, target) {
+  function careForCrew(key, allowed, change, note) {
     if (busy || encounterOpen || G.over || utilityOpen() || G.care[key] || !allowed()) return;
     change(); G.care[key] = true; G.today.notes.push(note);
     computePool(); renderAll(); renderTodayRecords(); renderArchive();
-    Habitat.toast(note); inspectCabinItem(item, target);
+    Habitat.toast(note); Habitat.closeCard();
     Expedition.notify(key);
   }
   function inspectCabinItem(item, target) {
@@ -495,25 +495,25 @@
     if (item === 'bed') { Habitat.closeCard(); return Expedition.sleep(); }
     if (item === 'bench') { Habitat.closeCard(); return Expedition.analyse(); }
     const card = data => Habitat.card({ ...data, anchor: target });
-    const action = (key, label, hint, allowed, change, note) => ({ label: G.care[key] ? '今天已经完成' : label, hint, disabled: !!G.care[key] || !allowed(), run: () => careForCrew(key, allowed, change, note, item, target) });
+    const action = (key, label, hint, allowed, change, note) => ({ label: G.care[key] ? '今天已经完成' : label, hint, disabled: !!G.care[key] || !allowed(), run: () => careForCrew(key, allowed, change, note) });
     const bookAction = (page, label) => ({ label, hint: page === 'brief' ? '翻开今日手册' : '打开基地控制台', run: () => showJournal(true, page) });
-    if (item === 'food') return card({ icon: '🍞', title: '食物补给箱', value: `${f1(G.food)}<small>点</small>`, description: `宇航员每天消耗 ${FOOD_USE} 点食物。温室收获后会增加食物。加餐可提高心情。`, actions: [
+    if (item === 'food') return card({ title: '食物补给箱', value: `${f1(G.food)}<small>点</small>`, description: `宇航员每天消耗 ${FOOD_USE} 点食物。温室收获后会增加食物。加餐可提高心情。`, actions: [
       action('snack', '给大家加一餐', '食物 −3 · 心情 +6 · 每日一次', () => G.food >= 3 && G.morale < 100, () => { G.food -= 3; G.morale = clamp(G.morale + 6, 0, 100); }, '宇航员已加餐。食物 −3。心情最多 +6。'), bookAction('supplies', '清点生存物资')
     ] });
-    if (item === 'water') return card({ icon: '💧', title: '饮用水桶', value: `${f1(G.water)}<small>点</small>`, description: `宇航员每天消耗 ${WATER_USE} 点水。净水机可以补充饮水。净水需要电池。`, actions: [
+    if (item === 'water') return card({ title: '饮用水桶', value: `${f1(G.water)}<small>点</small>`, description: `宇航员每天消耗 ${WATER_USE} 点水。净水机可以补充饮水。净水需要电池。`, actions: [
       action('drink', '给宇航员喝水', '饮水 −2 · 心情 +4 · 每日一次', () => G.water >= 2 && G.morale < 100, () => { G.water -= 2; G.morale = clamp(G.morale + 4, 0, 100); }, '宇航员已喝水。饮水 −2。心情最多 +4。'), bookAction('care', '查看饮水和照护物资')
     ] });
-    if (item === 'purifier') return card({ icon: '🚰', title: '循环净水机', value: `${G.batt}<small>格电池</small>`, description: '净水机会净化回收水。每次消耗 2 格电池。饮水最多增加 12 点。', actions: [
+    if (item === 'purifier') return card({ title: '循环净水机', value: `${G.batt}<small>格电池</small>`, description: '净水机会净化回收水。每次消耗 2 格电池。饮水最多增加 12 点。', actions: [
       action('filter', '启动净水', '电池 −2 · 饮水最多 +12 · 每日一次', () => G.batt >= 2 && G.water < 100, () => { G.batt -= 2; G.water = clamp(G.water + 12, 0, 100); }, '净水已完成。电池 −2。饮水最多 +12。'), bookAction('plan', '查看今天的电力')
     ] });
-    if (item === 'medicine') return card({ icon: '💊', title: '急救药品', value: `${G.meds}<small>份</small>`, description: `宇航员健康为 ${G.health} / 4。药品可以恢复健康和心情。每天最多使用一份。`, actions: [
+    if (item === 'medicine') return card({ title: '急救药品', value: `${G.meds}<small>份</small>`, description: `宇航员健康为 ${G.health} / 4。药品可以恢复健康和心情。每天最多使用一份。`, actions: [
       action('medicine', '使用一份药品', '药品 −1 · 健康 +1 · 心情 +8', () => G.meds > 0 && (G.health < 4 || G.morale < 100), () => { G.meds--; G.health = clamp(G.health + 1, 0, 4); G.morale = clamp(G.morale + 8, 0, 100); }, '宇航员已使用药品。药品 −1。健康最多 +1。心情最多 +8。'), bookAction('care', '查看宇航员照护记录')
     ] });
-    if (item === 'crew') return card({ icon: G.morale >= 60 ? '😊' : G.morale >= 30 ? '😟' : '😴', title: '宇航员 · 阿星', value: `${Math.round(G.morale)}<small>心情</small>`, description: G.morale < 30 || G.water < 10 || G.food < 10 ? '阿星状态较差。请检查食物和饮水。' : G.morale < 60 ? '阿星心情偏低。聊天和加餐可提高心情。' : '阿星状态良好。你可以和宇航员聊天。', actions: [
+    if (item === 'crew') return card({ title: '宇航员 · 阿星', value: `${Math.round(G.morale)}<small>心情</small>`, description: G.morale < 30 || G.water < 10 || G.food < 10 ? '阿星状态较差。请检查食物和饮水。' : G.morale < 60 ? '阿星心情偏低。聊天和加餐可提高心情。' : '阿星状态良好。你可以和宇航员聊天。', actions: [
       action('chat', '陪大家聊一会儿', '心情 +4 · 每日一次', () => G.morale < 100, () => { G.morale = clamp(G.morale + 4, 0, 100); }, '宇航员已聊天。心情最多 +4。'), bookAction('care', '查看宇航员状态')
     ] });
-    if (item === 'calendar') return card({ icon: '📅', title: '墙上的任务日历', value: `${G.sol}<small>/30 日</small>`, description: `你已完成 ${G.hist.length} 天。今天要保障宇航员生活。还要分配科研电量。`, actions: [bookAction('brief', '翻开今天的手册'), { label: '查看历史记录', hint: '打开事件档案', run: () => { Habitat.closeCard(); bookType = 'archive'; showJournal(true); } }] });
-    if (item === 'radio') return card({ icon: '📡', title: '地球通讯器', value: G.conj > 0 ? '<small>信号中断</small>' : '<small>信号在线</small>', description: G.conj > 0 ? '太阳干扰了通信。日凌结束后才能收听消息。' : '每天可以收听一条消息。你需要选择处理方法。', actions: [
+    if (item === 'calendar') return card({ title: '墙上的任务日历', value: `${G.sol}<small>/30 日</small>`, description: `你已完成 ${G.hist.length} 天。今天要保障宇航员生活。还要分配科研电量。`, actions: [bookAction('brief', '翻开今天的手册'), { label: '查看历史记录', hint: '打开事件档案', run: () => { Habitat.closeCard(); bookType = 'archive'; showJournal(true); } }] });
+    if (item === 'radio') return card({ title: '地球通讯器', value: G.conj > 0 ? '<small>信号中断</small>' : '<small>信号在线</small>', description: G.conj > 0 ? '太阳干扰了通信。日凌结束后才能收听消息。' : '每天可以收听一条消息。你需要选择处理方法。', actions: [
       { label: G.care.signal ? '今天的消息已经听过' : '收听一条新消息', hint: '触发一个双选事件 · 每日一次', disabled: !!G.care.signal || G.conj > 0, run: () => {
         if (busy || encounterOpen || G.care.signal || G.conj > 0) return;
         G.care.signal = true; busy = true; lockPlanning(true); presentEncounter(nextCabinEvent(), () => { busy = false; lockPlanning(false); renderAll(); renderTodayRecords(); renderArchive(); updateShelf(); Habitat.toast('消息和选择已记入档案。'); $('#todayBook').focus({ preventScroll: true }); }, false);
@@ -522,31 +522,31 @@
   }
   function nextCabinEvent() {
     const events = [
-      { id: 'cabin-garden', kicker: '生活舱的新发现', icon: '🌱', title: '番茄长出了新叶', body: '番茄已发芽。你可以浇水。也可以记录生长情况。', choices: [
+      { id: 'cabin-garden', kicker: '生活舱的新发现', title: '番茄长出了新叶', body: '番茄已发芽。你可以浇水。也可以记录生长情况。', choices: [
         { t: '给小番茄浇一点水', d: [chip('pwr', '饮水 −3'), chip('sci', '心情 +9')], disabled: G.water < 3 ? '饮水不足' : '', fn: () => { G.water -= 3; G.morale = clamp(G.morale + 9, 0, 100); return '番茄已浇水。饮水 −3。心情最多 +9。'; } },
         { t: '拍照记录生长', d: [chip('sci', '科学 +4')], fn: () => { G.sci += 4; return '生长数据已记录。科学 +4。'; } }
       ] },
-      { id: 'cabin-goodnight', kicker: '来自地球的讯息', icon: '💌', title: '家人发来了语音', body: '家人发来了语音。你可以播放语音。也可以录制回信。', choices: [
+      { id: 'cabin-goodnight', kicker: '来自地球的讯息', title: '家人发来了语音', body: '家人发来了语音。你可以播放语音。也可以录制回信。', choices: [
         { t: '播放家人语音', d: [chip('sci', '心情 +8')], fn: () => { G.morale = clamp(G.morale + 8, 0, 100); return '宇航员已收听语音。心情最多 +8。'; } },
         { t: '录一段基地观测回信', d: [chip('sci', '科学 +3'), chip('pwr', '心情 +2')], fn: () => { G.sci += 3; G.morale = clamp(G.morale + 2, 0, 100); return '回信已发送。科学 +3。心情最多 +2。'; } }
       ] },
-      { id: 'cabin-pipe', kicker: '管道检查', icon: '🔧', title: '水管出现气泡', body: '气泡堵住了水管。检修可回收积水。你也可以切换备用管路。', choices: [
+      { id: 'cabin-pipe', kicker: '管道检查', title: '水管出现气泡', body: '气泡堵住了水管。检修可回收积水。你也可以切换备用管路。', choices: [
         { t: '检修水管', d: [chip('pwr', '电池 −2'), chip('sci', '饮水最多 +12')], disabled: G.batt < 2 ? '电池不足' : '', fn: () => { G.batt -= 2; G.water = clamp(G.water + 12, 0, 100); return '水管已疏通。电池 −2。饮水最多 +12。'; } },
         { t: '切到备用管路', d: [chip('pwr', '饮水 −4')], fn: () => { G.water = Math.max(0, G.water - 4); return '已切换备用管路。饮水 −4。'; } }
       ] },
-      { id: 'cabin-package', kicker: '整理储物柜', icon: '📦', title: '发现备用补给标签', body: '你发现了一张补给标签。你可以选择药品或食物。', choices: [
+      { id: 'cabin-package', kicker: '整理储物柜', title: '发现备用补给标签', body: '你发现了一张补给标签。你可以选择药品或食物。', choices: [
         { t: '选择急救药品', d: [chip('sci', '药品最多 +1')], fn: () => { G.meds = Math.min(9, G.meds + 1); return '补给已收到。药品最多 +1。'; } },
         { t: '选择备用食物', d: [chip('food', '食物最多 +8')], fn: () => { G.food = clamp(G.food + 8, 0, 100); return '补给已收到。食物最多 +8。'; } }
       ] },
-      { id: 'cabin-cold', kicker: '宇航员照护', icon: '🩹', title: '阿星需要休息', body: '阿星感到疲劳。你可以使用药品。也可以减少科研工作。', choices: [
+      { id: 'cabin-cold', kicker: '宇航员照护', title: '阿星需要休息', body: '阿星感到疲劳。你可以使用药品。也可以减少科研工作。', choices: [
         { t: '用一份药品照护', d: [chip('pwr', '药品 −1'), chip('sci', '健康 +1 · 心情 +6')], disabled: G.meds < 1 ? '没有备用药品' : '', fn: () => { G.meds--; G.health = Math.min(4, G.health + 1); G.morale = clamp(G.morale + 6, 0, 100); return '宇航员已使用药品。药品 −1。健康最多 +1。心情最多 +6。'; } },
         { t: '减少科研工作', d: [chip('sci', '科学 −3 · 心情 +4')], fn: () => { G.sci = Math.max(0, G.sci - 3); G.morale = clamp(G.morale + 4, 0, 100); return '宇航员已减少工作。科学 −3。心情最多 +4。'; } }
       ] },
-      { id: 'cabin-soup', kicker: '准备晚餐', icon: '🍲', title: '宇航员想喝热汤', body: '宇航员想喝番茄汤。做汤需要食物和饮水。', choices: [
+      { id: 'cabin-soup', kicker: '准备晚餐', title: '宇航员想喝热汤', body: '宇航员想喝番茄汤。做汤需要食物和饮水。', choices: [
         { t: '一起做一锅热汤', d: [chip('food', '食物 −3 · 饮水 −2'), chip('sci', '心情 +12')], disabled: G.food < 3 || G.water < 2 ? '食物或饮水不足' : '', fn: () => { G.food -= 3; G.water -= 2; G.morale = clamp(G.morale + 12, 0, 100); return '热汤已做好。食物 −3。饮水 −2。心情最多 +12。'; } },
         { t: '整理科研数据', d: [chip('sci', '科学 +4')], fn: () => { G.sci += 4; return '科研数据已整理。科学 +4。'; } }
       ] },
-      { id: 'cabin-photo', kicker: '拍照记录', icon: '📷', title: '火星出现晚霞', body: '天空出现了晚霞。阿星准备拍照。', choices: [
+      { id: 'cabin-photo', kicker: '拍照记录', title: '火星出现晚霞', body: '天空出现了晚霞。阿星准备拍照。', choices: [
         { t: '为宇航员合拍一张照片', d: [chip('sci', '心情 +8')], fn: () => { G.morale = clamp(G.morale + 8, 0, 100); return '宇航员已拍摄合照。心情最多 +8。'; } },
         { t: '拍摄大气与地貌', d: [chip('sci', '科学 +4')], fn: () => { G.sci += 4; return '大气照片已记录。科学 +4。'; } }
       ] }
@@ -561,9 +561,8 @@
     const defer = { t: '保留资源', d: [chip('none', '不消耗额外物资')], fn: () => '本次未消耗资源。' };
     while (options.length < 2) options.push(defer);
     if (options.every(c => c.disabled)) options[1] = e.choices.find(c => !c.disabled) || defer;
-    const icons = { flare: '☀️', stormWarn: '🌪️', stormStart: '🌪️', dustDevil: '🌬️', o2fault: '🔧', delta: '🪨', conjunction: '📡', cold: '❄️', blight: '🌱', resupply: '📦', bones: '🩹', letter: '💌', build: '🏗️', quake: '🔧', dirty: '🧹' };
     const panel = $('#dailyEventModal .daily-event-card');
-    panel.innerHTML = `<div class="daily-event-kicker"><span>${daily ? '今日事件' : '新消息'}</span><span>SOL ${String(G.sol).padStart(2,'0')}</span></div><div class="event-illustration" aria-hidden="true">${e.icon || icons[e.id] || '📡'}</div><h2 id="dailyEventTitle">${e.title}</h2><div id="dailyEventBody" class="event-description">${e.body}</div><div class="event-option-list">${options.map((c,i) => `<button class="event-option" data-option="${i}" ${c.disabled ? 'disabled' : ''}><b>${c.t}</b><span>${c.d.join('')}${c.disabled ? `<span class="chip none">${c.disabled}</span>` : ''}</span></button>`).join('')}</div>${e.real ? `<details class="event-science"><summary>${e.real.label}${e.real.date ? ' · '+e.real.date : ''} ↗</summary><p>${e.real.text}</p><small>${e.real.src}${e.real.est ? ' · 剂量为游戏估算' : ''}</small></details>` : ''}<p class="daily-event-foot">${daily ? '选择会影响今天的资源。电力不足时会减少设备用电。' : '今天只能收听一次消息。你的选择会记入档案。'}</p>`;
+    panel.innerHTML = `<div class="daily-event-kicker"><span>${daily ? '今日事件' : '新消息'}</span><span>SOL ${String(G.sol).padStart(2,'0')}</span></div><h2 id="dailyEventTitle">${e.title}</h2><div id="dailyEventBody" class="event-description">${e.body}</div><div class="event-option-list">${options.map((c,i) => `<button class="event-option" data-option="${i}" ${c.disabled ? 'disabled' : ''}><b>${c.t}</b><span>${c.d.join('')}${c.disabled ? `<span class="chip none">${c.disabled}</span>` : ''}</span></button>`).join('')}</div>${e.real ? `<details class="event-science"><summary>${e.real.label}${e.real.date ? ' · '+e.real.date : ''} ↗</summary><p>${e.real.text}</p><small>${e.real.src}${e.real.est ? ' · 剂量为游戏估算' : ''}</small></details>` : ''}<p class="daily-event-foot">${daily ? '选择会影响今天的资源。电力不足时会减少设备用电。' : '今天只能收听一次消息。你的选择会记入档案。'}</p>`;
     $('#dailyEventModal').hidden = false; $('#hud').inert = true; $('#habitatScene').inert = true;
     computePool(); renderAll(); Sound.alert();
     panel.querySelector('.event-option:not(:disabled)').focus({ preventScroll: true });

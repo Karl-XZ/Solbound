@@ -284,6 +284,7 @@ button{font:inherit;color:inherit}
 <link rel="stylesheet" href="css/habitat.css">
 <link rel="stylesheet" href="css/expedition.css">
 <link rel="stylesheet" href="css/console.css">
+<link rel="stylesheet" href="css/cabin-layout.css">
 </head>
 <body>
 <div id="frame">
@@ -318,13 +319,16 @@ button{font:inherit;color:inherit}
         <b>今日手册</b><small id="dockSol">SOL 01</small>
       </button>
     </nav>
-    <div id="survivalHUD" class="survival-bar" role="group" aria-label="基地资源">
-      <button data-item="food" aria-label="查看食物"><span class="resource-icon">🍞</span><span>食物<b id="cabinFood">50</b></span></button>
-      <button data-item="water" aria-label="查看饮用水"><span class="resource-icon">💧</span><span>饮水<b id="cabinWater">70</b></span></button>
-      <button data-item="medicine" aria-label="查看药品"><span class="resource-icon">💊</span><span>药品<b id="cabinMeds">4</b></span></button>
-      <button data-item="crew" aria-label="查看宇航员心情"><span class="resource-icon" id="moraleIcon">😊</span><span>心情<b id="cabinMorale">75</b></span></button>
-      <button data-item="calendar" aria-label="查看任务日历"><span class="resource-icon">📅</span><span>火星日<b id="cabinDay">01<small> / 30</small></b></span></button>
-    </div>
+    <footer id="cabinDashboard" aria-label="生活舱物资与电量">
+      <div id="survivalHUD" class="survival-bar" role="group" aria-label="基地资源">
+        <button data-item="food" aria-label="查看食物"><span>食物<b id="cabinFood">50</b></span></button>
+        <button data-item="water" aria-label="查看饮用水"><span>饮水<b id="cabinWater">70</b></span></button>
+        <button data-item="medicine" aria-label="查看药品"><span>药品<b id="cabinMeds">4</b></span></button>
+        <button data-item="crew" aria-label="查看宇航员心情"><span>心情<b id="cabinMorale">75</b></span></button>
+        <button data-item="calendar" aria-label="查看任务日历"><span>火星日<b id="cabinDay">01<small> / 30</small></b></span></button>
+      </div>
+      <div id="cabinPowerMount"></div>
+    </footer>
     <span class="room-hint" id="roomHint">点击物品进行操作。</span>
     <section id="baseConsole" aria-label="基地控制台" hidden>
       <div id="solCard" class="card"><div class="sol-k">火星日<button class="q" data-tip="sol">?</button></div><div class="sol-n"><b id="solN">01</b><span> / 30</span></div><div class="sol-bar"><s id="solBar"></s></div></div>
@@ -335,7 +339,7 @@ button{font:inherit;color:inherit}
     </section>
     <div id="notebook" class="notebook" data-book="today" role="region" aria-label="今日手册">
       <header class="book-shell">
-        <span class="book-brand"><span class="brand-mark">✦</span> ARES <span id="bookName">今日手册</span></span>
+        <span class="book-brand"><span class="brand-mark"></span> ARES <span id="bookName">今日手册</span></span>
         <button id="closeBook" class="shell-button" aria-label="关闭手册">收起 <span>↗</span></button>
       </header>
       <div class="book-leaves">
