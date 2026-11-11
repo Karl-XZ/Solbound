@@ -94,4 +94,6 @@ node --test tests/expedition.test.cjs
 真实浏览器验证脚本位于 `tests/browser/`。启动静态服务后，用已安装的 Playwright CLI 打开 `http://127.0.0.1:8766/?debug`，再调用 `run-code --filename tests/browser/first-day.pw.js`；其余脚本检查跳过路径、采样分析、手机摇杆和完整 30 日资源循环。
 浏览器脚本默认使用 8766 端口，截图保存在被 Git 忽略的 `output/playwright/`。30 日模拟采用固定事件表，并通过真实任务状态机模拟现场工作的结果；实地移动和工作步骤另由首日与采样脚本验证。
 
+`tests/browser/intro-transition.pw.js` 检查完整开场、提前跳过、中途跳过和直接进入。它逐帧比较停止开场前后的镜头位置与朝向，并检查切换到火星表面时遮罩已完全覆盖。开场停止后会保留当前镜头，避免恢复标题页视角。
+
 儿童文案规则记录在 `AGENTS.md`。提示使用短句和具体按钮名。教程只突出当前操作。

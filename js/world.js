@@ -44,7 +44,7 @@ window.World = (function () {
   const cam = { pos: V3(0, 0, 40), tgt: V3(), focus: 'overview', override: null };
   const earthDir = V3(-.02, .2, -.98).normalize();
   const lightDir = V3(-.9, .6, .35).normalize();
-  let todAnim = null, introAnim = null;
+  let todAnim = null, introAnim = null, introHold = null;
   const anchors = {};
   let NOW = 0;
 
@@ -804,7 +804,7 @@ window.World = (function () {
     NOW = now; const t = now / 1000, dt = Math.min(.05, t - (lastT || t)); lastT = t;
     runTweens();
     if (mode === 'space') {
-      const it = introAnim ? (now - introAnim.t0) / 1000 : 0;
+      const it = introAnim ? (now - introAnim.t0) / 1000 : (introHold ?? 0);
       SP.sky.uniforms.time.value = t;
       for (const m of [SP.earth, SP.mars, SP.moon]) m.material.uniforms.time.value = t;
       SP.earth.rotation.y = 2.96 + t * .012; SP.mars.rotation.y = t * .04;
@@ -815,7 +815,7 @@ window.World = (function () {
         const [p, l] = introPose(it); camera.position.copy(p); camera.lookAt(l);
         while (introAnim.cues.length && it >= introAnim.cues[0].t) introAnim.cb(introAnim.cues.shift().id);
         if (it >= INTRO_T[INTRO_T.length - 1] && !introAnim.ended) { introAnim.ended = true; introAnim.cb('end'); }
-      } else { camera.position.set(Math.cos(t * .03) * 5 + 8, 3 + Math.sin(t * .05), 36); camera.lookAt(V3(-9, 0, 0)); }
+      } else if (introHold === null) { camera.position.set(Math.cos(t * .03) * 5 + 8, 3 + Math.sin(t * .05), 36); camera.lookAt(V3(-9, 0, 0)); }
       postM.uniforms.skyD.value = 3000; postM.uniforms.edgeFar.value = 900; postM.uniforms.alarm.value = 0;
       render(SP.scene, null, t);
     } else {
@@ -906,10 +906,11 @@ window.World = (function () {
     },
     setRendering(active) { rendering = active; },
     setMode(m) { mode = m; },
-    playIntro(cues, cb) { introAnim = { t0: performance.now(), cues: cues.slice().sort((a, b) => a.t - b.t), cb }; },
-    stopIntro() { introAnim = null; },
+    playIntro(cues, cb) { introHold = null; introAnim = { t0: performance.now(), cues: cues.slice().sort((a, b) => a.t - b.t), cb }; },
+    // Keep the last shot while the entry haze covers the surface scene cut.
+    stopIntro() { introHold = introAnim ? (performance.now() - introAnim.t0) / 1000 : 0; introAnim = null; },
     descend(cb) {
-      mode = 'surface'; const t0 = performance.now();
+      introHold = null; mode = 'surface'; const t0 = performance.now();
       const from = [V3(60, 230, 160), V3(0, 0, 0)];
       cam.pos.copy(from[0]); cam.tgt.copy(from[1]);
       cam.override = (t) => { const k = Math.min(1, (performance.now() - t0) / 6500); const e = ease(k);
@@ -925,6 +926,7 @@ window.World = (function () {
     releaseCamera() { cam.override = null; B.crew.forEach(a => a.visible = false); B.crewPods.forEach(c => c.visible = false);
       B.rocket.position.set(0, .4, 0); B.rocket.rotation.set(0, 0, 0); B.rocket.userData.flame.visible = false; st.alarm = 0; st.auroraT = 0; },
     reset() {
+      introHold = null;
       playerEnabled = inputEnabled = false; player.setActive(false); if (markerGroup) this.setMarkers([]);
       B.rows.forEach((r, i) => r.visible = i < 2); B.domes.forEach((d, i) => { d.visible = d.userData.tube.visible = i === 0; });
       B.mods.forEach((m, i) => m.visible = i < 2); B.tanks.forEach((t, i) => t.visible = i < 2); B.sci.forEach(o => o.visible = false);
