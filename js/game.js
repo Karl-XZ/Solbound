@@ -318,7 +318,8 @@
     });
     const left = p.left;
     $('.p-left').innerHTML = G.pool < 0 ? '' : left > 0 ? `剩 <b>${left}</b> 格 → ${p.wasted ? `电池已满。<b class="bad">浪费 ${p.wasted} 格</b>` : '存进电池'}` : '电全部分配完';
-    const eb = evaBlocked(); $('#evaDepart').innerHTML = `<span class="sw" aria-hidden="true"></span><span>${eb || '出舱探索'}<small>氧气 −3 · 辐射 +${Math.round((.25 + G.today.flareOut) * 100) / 100}</small></span>`; $('#evaDepart').disabled = !!eb;
+    const eb = evaBlocked(); $('#evaDepart').innerHTML = `<span><strong>${eb || '出舱探索'}</strong><small>先检查装备与天气</small></span>`; $('#evaDepart').disabled = !!eb;
+    $('#evaDepart').setAttribute('aria-label',eb || '出舱探索');
     // 环境
     const sun = Math.round(G.sunVar * (G.storm > 0 ? G.stormMul : 1) * 100);
     const tau = G.storm > 0 ? (G.stormSave ? 6.2 : 6.8) : (.4 + (1 - G.sunVar) * 3).toFixed(1);

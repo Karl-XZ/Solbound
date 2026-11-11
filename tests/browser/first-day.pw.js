@@ -1,11 +1,15 @@
 async (page) => {
   const errors=[]; page.on('pageerror',e=>errors.push(e.message));
   await page.route('**/*', route => route.continue());await page.reload();
+  await page.evaluate(()=>{
+    const original=THREE.Scene.prototype.updateMatrixWorld;
+    THREE.Scene.prototype.updateMatrixWorld=function(...args){if(this.name==='MarsSurface')window.surfaceUnderTest=this;return original.apply(this,args);};
+  });
   await page.getByRole('button',{name:'跳过开场',exact:true}).click();
   await page.getByRole('button',{name:'开始教程'}).waitFor({timeout:20000});
   await page.getByRole('button',{name:'开始教程'}).click();
   await page.locator('#cabinPower').click();
-  if(!await page.locator('#missionGuide').innerText().then(t=>t.includes('积灰')&&t.includes('接头')))throw Error('faults not explained');
+  if(!await page.locator('#missionGuide').innerText().then(t=>t.includes('还没找到原因')&&t.includes('黄色')))throw Error('departure should not invent a visible diagnosis');
   await page.locator('#evaDepart').click();
   await page.locator('#fieldDialog').getByRole('button',{name:'出舱',exact:true}).click();
   let g;
@@ -35,6 +39,10 @@ async (page) => {
   if(await page.evaluate(()=>Expedition.model.step)!=='clean')throw Error('movement lesson not complete');
   const solar=await page.evaluate(()=>World.getSite('solar'));
   await walkTo(solar.x+2,17);await walkTo(solar.x+2,solar.z);await walkTo(solar.x,solar.z);
+  if(await page.locator('#guideLocate').innerText()==='查看太阳能板')await page.locator('#guideLocate').click();
+  await page.waitForTimeout(1800);
+  const before=await page.evaluate(()=>({gen:__dbg.G().gen,dust:surfaceUnderTest.getObjectByName('solar-dust-front').visible,plugX:surfaceUnderTest.getObjectByName('solar-power-plug').position.x}));
+  if(!before.dust||before.plugX<1)throw Error('work site has no visible dust or disconnected plug');
   await page.screenshot({path:'output/playwright/at-solar.png'});
   await page.locator('#nearbyAction').click();
   const board=await page.locator('#cleanBoard').boundingBox();
@@ -43,12 +51,19 @@ async (page) => {
   await page.mouse.up();await page.locator('#finishWork').click();
   let state=await page.evaluate(()=>({eff:__dbg.G().panelEff,damage:__dbg.G().damaged,step:Expedition.model.step}));
   if(state.eff!==1 || state.damage!==1 || state.step!=='repair')throw Error('clean '+JSON.stringify(state));
+  const cleaned=await page.evaluate(()=>({gen:__dbg.G().gen,dust:surfaceUnderTest.getObjectByName('solar-dust-front').visible,plugX:surfaceUnderTest.getObjectByName('solar-power-plug').position.x}));
+  if(cleaned.dust||cleaned.plugX<1||cleaned.gen<=before.gen)throw Error('cleaning did not visibly clear dirt and improve generation');
+  await page.waitForTimeout(1700);await page.screenshot({path:'output/playwright/solar-clean-plug-loose.png'});
   await page.locator('#nearbyAction').click();
   await page.locator('#looseConnector').click();await page.locator('#repairSocket').click();await page.locator('#fasten').click();
   await page.screenshot({path:'output/playwright/repair-work.png'});
   await page.locator('#finishWork').click();
   state=await page.evaluate(()=>({damage:__dbg.G().damaged,step:Expedition.model.step,gen:__dbg.G().gen}));
   if(state.damage!==0 || state.step!=='return')throw Error('repair '+JSON.stringify(state));
+  const fixed=await page.evaluate(()=>({gen:__dbg.G().gen,plugX:surfaceUnderTest.getObjectByName('solar-power-plug').position.x,color:surfaceUnderTest.getObjectByName('solar-power-plug').material.color.getHexString()}));
+  if(fixed.plugX!==0||fixed.color!=='7fae5b'||fixed.gen<=cleaned.gen)throw Error('repair did not visibly reconnect the plug and restore generation');
+  await page.waitForTimeout(1700);await page.screenshot({path:'output/playwright/solar-repaired.png'});
+  await page.locator('#cameraReset').click();
   await walkTo(solar.x+2,17);await walkTo(2,17);await walkTo(2,12);
   await page.locator('#nearbyAction').click();
   if(await page.evaluate(()=>Expedition.outside))throw Error('return failed');

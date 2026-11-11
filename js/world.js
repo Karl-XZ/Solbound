@@ -184,7 +184,7 @@ window.World = (function () {
   function buildSurface() {
     const scene = new THREE.Scene(), overlay = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0xe39a55, .0066);
-    S.scene = scene; S.overlay = overlay;
+    S.scene = scene; S.scene.name = 'MarsSurface'; S.overlay = overlay;
     M = Object.assign(M, { cream: toon(P.cream), white: toon(0xfbf3df), navy: toon(P.navy), mustard: toon(P.mustard), orange: toon(P.orange), brick: toon(P.brick),
       tealD: toon(P.tealD), teal: toon(P.teal), green: toon(P.green), grey: toon(0x9a8f86), rock: toon(P.brick, { flatShading: true }),
       win: new THREE.MeshBasicMaterial({ color: P.mustard }), winOff: new THREE.MeshBasicMaterial({ color: 0x3a2a30 }), red: new THREE.MeshBasicMaterial({ color: P.red }),
@@ -338,6 +338,7 @@ window.World = (function () {
     // 太阳能阵列：每一行 4 块板
     const arr = new THREE.Group(); arr.position.set(16, 0, -8); arr.rotation.y = Math.atan2(lightDir.x, lightDir.z); base.add(arr); B.arr = arr;
     B.rows = [];
+    const panelDustMaterial = new THREE.MeshBasicMaterial({color:0xc59b70,side:THREE.DoubleSide});
     for (let r = 0; r < 5; r++) {
       const row = new THREE.Group(); row.position.z = -r * 4.6; arr.add(row); B.rows.push(row); row.userData.panels = [];
       for (let c = 0; c < 4; c++) { const x = c * 4.8 - 7.2;
@@ -345,9 +346,23 @@ window.World = (function () {
         const pg = new THREE.Group(); pg.position.set(x, 1.75, 0); pg.rotation.x = -.55; row.add(pg);
         mesh(new THREE.BoxGeometry(4.3, .12, 2.7), M.panel, pg);
         pg.add(new THREE.Mesh(new THREE.BoxGeometry(4.32, .13, .08), new THREE.MeshBasicMaterial({ color: P.tealL })));
+        const dust = new THREE.Group(); pg.add(dust); pg.userData.dust = dust;
+        if(r===0 && c===3)dust.name='solar-dust-front';
+        [[-1.3,-.65],[0,-.65],[1.25,-.5],[-.85,.65],[.85,.7]].forEach(([dx,dz],i)=>{
+          const patch=new THREE.Mesh(new THREE.CircleGeometry(.52+(i%2)*.13,7),panelDustMaterial);
+          patch.rotation.x=-Math.PI/2;patch.rotation.z=i*.7;patch.position.set(dx,.075,dz);dust.add(patch);
+        });
         row.userData.panels.push(pg); }
       row.visible = r < 2;
     }
+    const connection=new THREE.Group();connection.position.set(0,.9,-7);connection.rotation.y=2.1;arr.add(connection);B.solarConnection=connection;
+    mesh(new THREE.BoxGeometry(1.65,1.4,.7),M.cream,connection);
+    mesh(new THREE.BoxGeometry(.85,.75,.1),M.navy,connection).position.set(0,.15,.4);
+    const plug=mesh(new THREE.BoxGeometry(.55,.5,.55),new THREE.MeshBasicMaterial({color:P.orange}),connection);
+    plug.name='solar-power-plug';B.solarPlug=plug;
+    B.solarLamp=mesh(new THREE.SphereGeometry(.15,10,8),new THREE.MeshBasicMaterial({color:P.orange}),connection);
+    B.solarLamp.position.set(-.5,.5,.4);
+    B.solarCable=new THREE.Line(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:P.navy}));connection.add(B.solarCable);
     // 电池组
     const bat = new THREE.Group(); bat.position.set(8, 0, 8); bat.rotation.y = -.4; base.add(bat); B.bat = bat; B.cells = [];
     for (let i = 0; i < 6; i++) { const cab = mesh(new THREE.BoxGeometry(1.1, 1.8, 1.1), i < 4 ? M.navy : M.tealD, bat); cab.position.set(i * 1.3 - 3.2, .9, 0); if (i >= 4) { cab.visible = false; cab.userData.extra = true; } }
@@ -430,6 +445,10 @@ window.World = (function () {
   /* ---------- 状态同步：玩家的每个决定都会写到这里 ---------- */
   function applyVis(initial) {
     const v = vis;
+    B.rows.forEach(row=>row.userData.panels.forEach(panel=>{panel.userData.dust.visible=v.panelEff<.98;}));
+    B.solarPlug.position.set(v.damaged?1.15:0,.15,.7);
+    B.solarPlug.material.color.set(v.damaged?0xe1753f:0x7fae5b);B.solarLamp.material.color.copy(B.solarPlug.material.color);
+    B.solarCable.geometry.setFromPoints([V3(-.75,-.45,.2),V3(-.6,-.9,.8),V3(B.solarPlug.position.x-.2,.1,.9)]);
     B.rows.forEach((r, i) => { const want = i < v.rows; if (want && !r.visible) initial ? r.visible = true : pop(r, r.getWorldPosition(V3())); else if (!want) r.visible = false; });
     B.domes.forEach((d, i) => { const want = i < v.domes; if (want && !d.visible) { if (initial) { d.visible = d.userData.tube.visible = true; } else { pop(d.userData.tube, d.position.clone()); pop(d); } } });
     B.mods.forEach((m, i) => { if (i < 2) return; const want = i - 2 < v.labs; if (want && !m.visible) initial ? m.visible = true : pop(m, V3(Math.cos(MOD_ANG[i]) * 7, 0, Math.sin(MOD_ANG[i]) * 7)); });
@@ -630,10 +649,8 @@ window.World = (function () {
       const c = m.userData.cur; m.scale.set(5.4 * c, 2.7 * c, 2.7 * c); m.visible = c > .02; });
     // 太阳能板：清洁度、沙尘、损坏
     M.panel.color.copy(panelClean).lerp(panelDirty, Math.min(1, Math.max(0, (1 - v.panelEff) * 2.2 + st.storm * .5)));
-    const broken = B.rows[0].userData.panels[1];
-    broken.rotation.x = lerp(broken.rotation.x, v.damaged ? .9 : -.55, dt * 2); broken.rotation.z = lerp(broken.rotation.z, v.damaged ? .35 : 0, dt * 2);
-    broken.position.y = lerp(broken.position.y, v.damaged ? .9 : 1.75, dt * 2);
-    if (v.damaged && Math.random() < dt * 2) spark(broken.getWorldPosition(V3()), V3((Math.random() - .5) * 3, 3, (Math.random() - .5) * 3), 0xfff3a0, 2.5, .5);
+    anchors.solarDust=B.rows[0].userData.panels[3].getWorldPosition(V3()).add(V3(0,.5,0));
+    anchors.solarConnector=B.solarPlug.getWorldPosition(V3()).add(V3(0,.5,0));
     // 电池电量条
     B.cells.forEach((c, i) => { c.visible = i < 8 || v.battBonus > 0; c.material = i < v.batt ? M.tealGlow : M.winOff; });
     if (v.battBonus > 0) { B.roverCable.visible = true; B.rover.position.set(11, H(11, 11), 11); B.rover.rotation.y = .8; B.roverCable.geometry.setFromPoints([V3(11, 1.2, 11), V3(10.5, 1, 9)]); }
@@ -895,6 +912,7 @@ window.World = (function () {
     getPlayer() { return { x:B.astroPos.x, z:B.astroPos.z, yaw:player.yaw, active:playerEnabled }; },
     resetPlayer() { B.astroPos.set(sites.door.x,0,sites.door.z); player.clear(); player.yaw=0; },
     getSite(name) { return sites[name] || sites.rock; },
+    faceSolar() { const target=B.arr.getWorldPosition(V3());player.yaw=Math.atan2(B.astroPos.x-target.x,B.astroPos.z-target.z);player.pitch=.38;player.clear(); },
     setMarkers(entries) {
       markers.forEach(m => { m.ring.geometry.dispose();m.ring.material.dispose(); m.beacon.geometry.dispose();m.beacon.material.dispose(); }); markers.length=0;
       markerGroup.clear();
@@ -945,7 +963,7 @@ window.World = (function () {
     // 一次性特效
     fx(name) {
       if (name === 'repair') for (let i = 0; i < 40; i++) setTimeout(() => spark(V3(4 + Math.random() * 2, 2.5, -14.6), V3((Math.random() - .5) * 5, 3 + Math.random() * 3, 2), 0xffe08a, 3, .8), i * 40);
-      if (name === 'clean') { const r = B.arr.getWorldPosition(V3()); for (let i = 0; i < 16; i++) setTimeout(() => puff(V3(r.x + 4 + (Math.random() - .5) * 14, 2.5, r.z - 4 + (Math.random() - .5) * 10), { mat: 'dust', s0: .4, s1: 1.8, life: 1.6 }), i * 90); }
+      if (name === 'clean') B.rows.filter(row=>row.visible).flatMap(row=>row.userData.panels).forEach((panel,i)=>setTimeout(()=>puff(panel.getWorldPosition(V3()).add(V3(0,.2,0)),{mat:'dust',s0:.12,s1:.5,life:.7,vel:V3(.6,.6,0)}),i*45));
       if (name === 'pull') burst(V3(-12, 0, -2), 10, 'green', 3);
       if (name === 'sample') { B.rover.userData.mission = true; const from = B.rover.position.clone(), to = V3(-25, 0, -17);
         tween(5000, k => { const p = V3().lerpVectors(from, to, ease(k)); B.rover.position.set(p.x, H(p.x, p.z), p.z); B.rover.rotation.y = Math.atan2(to.x - from.x, to.z - from.z) - Math.PI / 2; }, () => setTimeout(() => B.rover.userData.mission = false, 6000)); }

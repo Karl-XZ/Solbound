@@ -2,14 +2,14 @@
 window.Expedition = (() => {
   const $ = s => document.querySelector(s);
   let api, model = ExpeditionModel.create(), outside = false, activity = null, choiceOpen = false, lastGuide = '', moved = 0, lastPos, hazardNotified=false;
-  let releaseStick = () => {};
+  let releaseStick = () => {}, solarNear=false, solarInView=false;
   const touchControls = () => innerWidth <= 700 || matchMedia('(pointer:coarse)').matches;
   const guide = {
     console: ['打开控制台', '点击控制台或下方的电量卡。查看发电量。', 'console', '打开控制台'],
-    depart: ['点击「出舱探索」', '底部显示发电量。太阳能板有积灰。供电接头也松了。我们要出舱维修。', 'departure', '出舱探索'],
+    depart: ['准备出舱检查', '发电量偏低。我们还没找到原因。点击黄色的「出舱探索」按钮，先检查出舱准备。', 'departure', '出舱探索'],
     move: ['走到黄色光圈', '让宇航员走进黄色光圈。'],
     clean: ['清扫太阳能板', '沿箭头走到太阳能板旁。点击「清扫太阳能板」。再用刷子擦掉灰尘。'],
-    repair: ['修复供电接头', '接头仍然松着。点击「固定松脱接头」。再把接头接回接口。'],
+    repair: ['检查供电接头', '点击「固定松脱接头」。查看接头与接口的位置。再把接头接回去。'],
     return: ['走回舱门', '太阳能板已修好。沿舱门箭头返回。靠近后点击「回舱」。'],
     filter: ['点击净水机', '发电已恢复。我们用电净水。净水会消耗 2 格电池。', 'purifier', '打开净水机'],
     drink: ['点击饮水桶', '净水已完成。现在给宇航员喝水。', 'water', '打开饮水桶'],
@@ -65,14 +65,15 @@ window.Expedition = (() => {
     return true;
   }
   function newDay(g) {
+    solarNear=solarInView=false;
     outside=false; World.setPlayerActive(false); lastPos=null;moved=0;hazardNotified=false;
     model.tasks=model.tasks.filter(t=>t.phase!=='done' && !t.daily);
     if(g.sol>1)model.skip();
     if(g.sol===1){
       model=ExpeditionModel.create();
       addTask({id:'first-clean',title:'清扫太阳能板',kind:'clean',target:'solar',cost:{},needed:g=>g.panelEff<1,complete:()=>api.effect(()=>{g.panelEff=1;World.fx('clean');},'清扫完成。太阳能板清洁度恢复到 100%。')});
-      addTask({id:'first-repair',title:'固定松脱接头',kind:'repair',target:'solar',cost:{},needed:g=>g.damaged>0,complete:()=>api.effect(()=>{g.damaged=0;World.fx('repair');},'接头已固定。发电量已恢复。')});
-      showChoice('第 1 天：修复太阳能板', '<p>灰尘盖住了太阳能板。</p><p>一个供电接头也松了。太阳能板因此少发了电。</p><p>先出舱修复设备。再回舱学习净水和分电。</p><p class="field-note">教程没有操作倒计时。你可以随时跳过。</p>', [
+      addTask({id:'first-repair',title:'固定松脱接头',kind:'repair',target:'solar',cost:{},needed:g=>g.damaged>0,complete:()=>api.effect(()=>{g.damaged=0;},'接头已固定。发电量已恢复。')});
+      showChoice('第 1 天：检查发电', '<p>控制台显示发电偏低。</p><p>先查看发电量。再出舱检查太阳能板。</p><p>找到问题后修复设备。然后回舱学习净水和分电。</p><p class="field-note">教程没有操作倒计时。你可以随时跳过。</p>', [
         {label:'开始教程',run:()=>{model.guide.active=true;model.guide.index=0;renderGuide();}},
         {label:'跳过教程',run:()=>{model.skip();renderGuide();Habitat.toast('教程已跳过。你可以自行完成任务。');}}
       ]);
@@ -96,7 +97,7 @@ window.Expedition = (() => {
     if(model.guide.active && model.step!=='depart'){Habitat.toast(guide[model.step][0]);return;}
     const g=api.state(), blocked=api.blockReason(), cost={o2:3,dose:.25+g.today.flareOut};
     const jobs=model.tasks.filter(t=>t.phase!=='done' && (!model.guide.active || t.kind!=='survey'));
-    const jobsHTML=jobs.length?`<div class="departure-tasks"><b>本次可做的工作</b><ul>${jobs.map(t=>`<li><strong>${t.title}</strong><p>${taskInstruction(t)}</p></li>`).join('')}</ul></div>`:'<p>今天的工作已完成。你仍可出舱查看基地。</p>';
+    const jobsHTML=model.guide.active?'<div class="departure-tasks"><b>本次目标：检查太阳能板</b><p>出舱后先练习移动。再沿箭头走近太阳能板。检查板面和供电接口。</p></div>':jobs.length?`<div class="departure-tasks"><b>本次可做的工作</b><ul>${jobs.map(t=>`<li><strong>${t.title}</strong><p>${taskInstruction(t)}</p></li>`).join('')}</ul></div>`:'<p>今天的工作已完成。你仍可出舱查看基地。</p>';
     showChoice('出舱检查', `<div class="departure-weather ${blocked?'warning':''}">${blocked?' '+blocked:g.today.flareOut?' 发生太阳风暴。今天出舱会增加辐射。':' 天气适合出发'}</div>${jobsHTML}<p>本次消耗：<b>${costText(cost)}</b></p>${g.conjRisk>0?'<p class="departure-weather warning">日凌会影响通信。每次出舱有约 1/3 的概率发生漏气。漏气会额外消耗 6 点氧气。</p>':''}<p>氧气 ${Math.round(g.o2)} → ${Math.round((g.o2-3)*10)/10}；累计辐射 ${g.dose.toFixed(2)} → ${(g.dose+cost.dose).toFixed(2)} / 25 mSv。</p><p class="field-note">出舱只收费一次。移动和阅读不额外消耗氧气。这些数值是游戏规则。</p>`,[
       {label:blocked || (!ExpeditionModel.canAfford(g,cost)?'氧气不足或辐射过高':'出舱'),disabled:!!blocked || !ExpeditionModel.canAfford(g,cost),run:()=>{
         if(api.blockReason() || !ExpeditionModel.canAfford(g,cost))return;
@@ -208,20 +209,24 @@ window.Expedition = (() => {
     const power=api.powerStatus();
     let description=g[1];
     if(step==='console')description=`下方显示：今日发电 ${api.state().gen} 格。正常约 ${power.normal} 格。点击电量卡打开控制台。`;
-    if(step==='depart')description=`底部显示：今日发电 ${api.state().gen} 格。正常约 ${power.normal} 格。太阳能板有积灰。供电接头也松了。点击「出舱探索」。`;
+    if(step==='depart')description=`今日发电 ${api.state().gen} 格。正常约 ${power.normal} 格。我们还没找到原因。点击本卡片中的黄色「出舱探索」按钮。`;
     if(step==='move')description=touchControls()?'拖动左下角的摇杆。让宇航员走进黄色光圈。':'按方向键移动。让宇航员走进黄色光圈。';
-    if(step==='repair')description=`清扫后发电提高到 ${api.state().gen} 格。接头仍然松着。点击「固定松脱接头」。`;
+    if(step==='repair')description=`清扫后发电提高到 ${api.state().gen} 格，还没恢复正常。接下来检查供电接口。点击「固定松脱接头」。`;
     if(step==='return')description=`发电量已提高到 ${api.state().gen} 格。沿舱门箭头返回。靠近后点击「回舱」。`;
+    if(step==='clean')description=!solarNear?'沿箭头走到太阳能板旁。先检查设备。':!solarInView?'点击「查看太阳能板」，转向设备。':'板面上的棕色块是灰尘。点击「清扫太阳能板」查看板面。';
+    if(step==='repair' && solarNear)description=!solarInView?'点击「查看太阳能板」，转向供电接口。':`板面已擦干净。橙色接头还没有插进接口。点击「固定松脱接头」。`;
     let powerHint=$('#powerGuideHint');
     if(!powerHint && $('#power .p-h')){powerHint=document.createElement('p');powerHint.id='powerGuideHint';powerHint.className='field-note';$('#power .p-h').appendChild(powerHint);}
     if(powerHint)powerHint.textContent=step==='allocate'?'给制氧分配至少 3 格电。点击「完成分电」。':'每格电只能分给一个设备。';
     const atPower=$('#frame').classList.contains('console-open');
     if(step==='allocate')description=atPower?`给制氧分配至少 3 格电。当前已分配 ${api.state().alloc.o2} 格。点击「完成分电」。`:'点击控制台。给制氧分配至少 3 格电。';
-    const guideState=`${step}:${atPower}:${step==='allocate'?api.state().alloc.o2:''}`;
+    const atSolarWork=['clean','repair'].includes(step) && solarNear;
+    const label=step==='allocate' && atPower?'完成分电':atSolarWork?(solarInView?guideTask().title:'查看太阳能板'):g[3] || '查看任务位置';
+    const guideState=`${step}:${atPower}:${step==='allocate'?api.state().alloc.o2:''}:${solarNear}:${solarInView}`;
     if(guideState!==lastGuide){
-      card.innerHTML=`<span class="field-eyebrow">第 1 天 · 步骤 ${model.guide.index+1} / 10</span><h3>${g[0]}</h3><p>${description}</p><div><button id="guideLocate" class="field-button">${step==='allocate' && atPower?'完成分电':g[3] || '查看任务位置'}</button><button id="skipGuide" class="text-button">跳过教程</button></div>`;
+      card.innerHTML=`<span class="field-eyebrow">第 1 天 · 步骤 ${model.guide.index+1} / 10</span><h3>${g[0]}</h3><p>${description}</p><div><button id="guideLocate" class="field-button ${step==='depart' || atSolarWork?'primary':''}">${label}</button><button id="skipGuide" class="text-button">跳过教程</button></div>`;
       $('#skipGuide').onclick=()=>{model.skip();renderGuide();markers();Habitat.toast('教程已跳过。你可以自行完成任务。');};
-      $('#guideLocate').onclick=()=>{if(step==='allocate' && atPower)return api.completeAllocation();if(g[2]==='departure')return requestDeparture();if(g[2]){const el=g[2]==='console'?$('#cabinPower'):document.querySelector(`[data-object="${g[2]}"]`);if(el){el.scrollIntoView({block:'center',inline:'center',behavior:'smooth'});el.focus({preventScroll:true});api.inspect(g[2],el);}}else showMap();};
+      $('#guideLocate').onclick=()=>{if(atSolarWork)return solarInView?interact():World.faceSolar();if(step==='allocate' && atPower)return api.completeAllocation();if(g[2]==='departure')return requestDeparture();if(g[2]){const el=g[2]==='console'?$('#cabinPower'):document.querySelector(`[data-object="${g[2]}"]`);if(el){el.scrollIntoView({block:'center',inline:'center',behavior:'smooth'});el.focus({preventScroll:true});api.inspect(g[2],el);}}else showMap();};
       lastGuide=guideState;markers();
     }
     if(g[2])document.querySelector(`[data-object="${g[2]}"]`)?.classList.add('tutorial-target');
@@ -263,6 +268,14 @@ window.Expedition = (() => {
       const pause=!!paused();World.setPlayerInput(!pause);
       if(pause)releaseStick();
       const p=World.getPlayer();if(lastPos)moved+=Math.hypot(p.x-lastPos.x,p.z-lastPos.z);lastPos=p;
+      const site=World.getSite('solar'),near=Math.hypot(p.x-site.x,p.z-site.z)<=4.5;
+      const projected=World.project(model.step==='repair'?'solarConnector':'solarDust'),stage=$('#stage').getBoundingClientRect();
+      const visible=near && !!projected?.vis && document.elementFromPoint(stage.left+projected.x,stage.top+projected.y)===$('#stage canvas');
+      if(near!==solarNear || visible!==solarInView){solarNear=near;solarInView=visible;renderGuide();}
+      for(const [id,anchor,text] of [['dustEvidence','solarDust',api.state().panelEff<.98?'棕色部分：灰尘':'板面已清洁'],['connectorEvidence','solarConnector',api.state().damaged?'橙色接头未插紧':'接头已插好']]){
+        const label=$('#'+id),pos=World.project(anchor),otherStep=model.guide.active && model.step!==(id==='dustEvidence'?'clean':'repair');label.hidden=!near || pause || !pos?.vis || otherStep;
+        if(!label.hidden){label.style.left=pos.x+'px';label.style.top=(pos.y-15)+'px';label.textContent=text;}
+      }
       if(model.guide.active && model.step==='move'){const s=World.getSite('walk');if(moved>3 && Math.hypot(p.x-s.x,p.z-s.z)<4){notify('move');markers();}}
       const n=nearest(),close=n.distance<=4.5;
       const action=$('#nearbyAction');action.disabled=!close || pause; action.textContent=close?`${touchControls()?'':'E · '}${n.task.title}`:`走到黄色标记 · ${Math.round(n.distance)} 米`;
@@ -278,6 +291,7 @@ window.Expedition = (() => {
     api=adapter;
     const root=document.createElement('div');root.id='expeditionUI';root.innerHTML=`<div id="fieldHud" hidden><aside class="mission-card"><span class="field-eyebrow" id="missionWeather"></span><h3>今日任务</h3><ul id="missionTasks"></ul><p id="carriedSamples"></p></aside><div id="fieldStats" hidden></div><aside id="missionGuide" hidden></aside></div><div id="fieldControls" hidden><div id="objectiveDirection"></div><div id="homeDirection"></div><div class="camera-tools"><button id="fieldMap">任务位置</button><button id="cameraReset">重置视角</button></div><div id="touchStick" aria-label="移动摇杆"><span></span></div><div class="field-help">WASD / 方向键：移动 · 拖动画面：转动视角</div><button id="nearbyAction" disabled></button></div><div id="fieldDialog" hidden></div>`;
     $('#frame').appendChild(root);
+    for(const id of ['dustEvidence','connectorEvidence']){const label=document.createElement('span');label.id=id;label.className='solar-evidence';label.hidden=true;$('#fieldControls').appendChild(label);}
     const powerCard=document.createElement('button');powerCard.id='cabinPower';powerCard.className='cabin-power';powerCard.setAttribute('aria-label','电量卡：查看今日发电、电池余量和故障原因');powerCard.onclick=()=>api.inspect('console',powerCard);$('#cabinPowerMount').append(powerCard);
     const bookSkip=document.createElement('button');bookSkip.id='bookSkipGuide';bookSkip.className='text-button';bookSkip.textContent='跳过引导';bookSkip.hidden=true;bookSkip.onclick=()=>{model.skip();renderGuide();};$('#closeBook').before(bookSkip);
     $('#nearbyAction').onclick=interact;$('#fieldMap').onclick=showMap;$('#cameraReset').onclick=()=>{World.controller.yaw=0;World.controller.pitch=.38;World.controller.clear();};

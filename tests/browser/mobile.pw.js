@@ -4,7 +4,7 @@ async page => {
   await page.getByRole('button',{name:'开始教程'}).waitFor({timeout:20000});
   await page.getByRole('button',{name:'开始教程'}).click();
   await page.locator('#guideLocate').click();
-  if(!await page.locator('#missionGuide').innerText().then(t=>t.includes('积灰')&&t.includes('接头')))throw Error('mobile tutorial inspection is missing');
+  if(!await page.locator('#missionGuide').innerText().then(t=>t.includes('还没找到原因')&&t.includes('黄色')))throw Error('mobile departure instruction is not grounded in the visible reading');
   await page.screenshot({path:'output/playwright/mobile-cabin.png'});
   await page.locator('#skipGuide').click();
   await page.locator('#consoleReturn').click();
