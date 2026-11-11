@@ -9,7 +9,7 @@ async page => {
   if(!await page.locator('#meters').isVisible())throw Error('舱内缺少前哨站状态');
   await page.evaluate(()=>{window.stationMeterBefore=document.querySelector('#meters');});
   await page.locator('#cabinPower').click();
-  if(!await page.evaluate(()=>document.querySelector('#meters')===window.stationMeterBefore))throw Error('电力台用了第二套资源栏');
+  if(!await page.evaluate(()=>document.querySelector('#meters')===window.stationMeterBefore))throw Error('控制台用了第二套资源栏');
   await page.locator('#consoleReturn').click();
   await page.getByRole('button',{name:'净水机：消耗电池净化饮用水'}).click();await page.getByRole('button',{name:/启动净水/}).click();
   const batt=await page.evaluate(()=>__dbg.G().batt);

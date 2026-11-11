@@ -5,7 +5,7 @@ window.Expedition = (() => {
   let releaseStick = () => {};
   const touchControls = () => innerWidth <= 700 || matchMedia('(pointer:coarse)').matches;
   const guide = {
-    console: ['打开电力台', '点击电力台或下方的电量卡。查看发电量。', 'console', '打开电力台'],
+    console: ['打开控制台', '点击控制台或下方的电量卡。查看发电量。', 'console', '打开控制台'],
     depart: ['点击「出舱探索」', '底部显示发电量。太阳能板有积灰。供电接头也松了。我们要出舱维修。', 'departure', '出舱探索'],
     move: ['走到黄色光圈', '让宇航员走进黄色光圈。'],
     clean: ['清扫太阳能板', '沿箭头走到太阳能板旁。点击「清扫太阳能板」。再用刷子擦掉灰尘。'],
@@ -13,7 +13,7 @@ window.Expedition = (() => {
     return: ['走回舱门', '太阳能板已修好。沿舱门箭头返回。靠近后点击「回舱」。'],
     filter: ['点击净水机', '发电已恢复。我们用电净水。净水会消耗 2 格电池。', 'purifier', '打开净水机'],
     drink: ['点击饮水桶', '净水已完成。现在给宇航员喝水。', 'water', '打开饮水桶'],
-    allocate: ['给制氧机分电', '宇航员每天需要氧气。制氧机需要电。点击电力台。', 'console', '打开电力台'],
+    allocate: ['给制氧机分电', '宇航员每天需要氧气。制氧机需要电。点击控制台。', 'console', '打开控制台'],
     sleep: ['点击床结束今天', '净水和维修已完成。点击床。确认后进入第 2 天。', 'bed', '查看床']
   };
   const costText = c => [c.o2 ? `氧气 −${c.o2}` : '', c.dose ? `辐射 +${Math.round(c.dose * 100) / 100}` : '', c.power ? `可用电 −${c.power}` : ''].filter(Boolean).join(' · ') || '不额外消耗物资';
@@ -189,7 +189,7 @@ window.Expedition = (() => {
     const g=api.state(),p=api.preview();
     showChoice(`结束第 ${g.sol} 天`,`<p>${g.sol<30?`确认后进入第 ${g.sol+1} 天。`:'确认后结束任务。'}设备会按分电方案运行。</p><p>预计资源如下：</p><div class="night-ledger"><span>氧气 <b>${Math.max(0,g.o2+p.o2).toFixed(1)}</b></span><span>食物 <b>${Math.max(0,g.food+p.food).toFixed(1)}</b></span><span>饮水 <b>${Math.max(0,g.water-2.5).toFixed(1)}</b></span><span>科学 <b>${(g.sci+p.sci).toFixed(1)}</b></span></div><p>${p.o2<0?' 今晚氧气会减少。请给制氧机增加电量。':'制氧电量已分配。'} 温室需要 3 天才能收获。</p>`,[
       {label:'确认结束今天',run:()=>{notify('sleep');api.endDay();}},
-      {label:'返回电力台',run:()=>{api.plan();notify('console');}}
+      {label:'返回控制台',run:()=>{api.plan();notify('console');}}
     ]);
   }
   function renderGuide() {
@@ -207,7 +207,7 @@ window.Expedition = (() => {
     const step=model.step,g=guide[step];if(!g)return;
     const power=api.powerStatus();
     let description=g[1];
-    if(step==='console')description=`下方显示：今日发电 ${api.state().gen} 格。正常约 ${power.normal} 格。点击电量卡打开电力台。`;
+    if(step==='console')description=`下方显示：今日发电 ${api.state().gen} 格。正常约 ${power.normal} 格。点击电量卡打开控制台。`;
     if(step==='depart')description=`底部显示：今日发电 ${api.state().gen} 格。正常约 ${power.normal} 格。太阳能板有积灰。供电接头也松了。点击「出舱探索」。`;
     if(step==='move')description=touchControls()?'拖动左下角的摇杆。让宇航员走进黄色光圈。':'按方向键移动。让宇航员走进黄色光圈。';
     if(step==='repair')description=`清扫后发电提高到 ${api.state().gen} 格。接头仍然松着。点击「固定松脱接头」。`;
@@ -216,7 +216,7 @@ window.Expedition = (() => {
     if(!powerHint && $('#power .p-h')){powerHint=document.createElement('p');powerHint.id='powerGuideHint';powerHint.className='field-note';$('#power .p-h').appendChild(powerHint);}
     if(powerHint)powerHint.textContent=step==='allocate'?'给制氧分配至少 3 格电。点击「完成分电」。':'每格电只能分给一个设备。';
     const atPower=$('#frame').classList.contains('console-open');
-    if(step==='allocate')description=atPower?`给制氧分配至少 3 格电。当前已分配 ${api.state().alloc.o2} 格。点击「完成分电」。`:'点击电力台。给制氧分配至少 3 格电。';
+    if(step==='allocate')description=atPower?`给制氧分配至少 3 格电。当前已分配 ${api.state().alloc.o2} 格。点击「完成分电」。`:'点击控制台。给制氧分配至少 3 格电。';
     const guideState=`${step}:${atPower}:${step==='allocate'?api.state().alloc.o2:''}`;
     if(guideState!==lastGuide){
       card.innerHTML=`<span class="field-eyebrow">第 1 天 · 步骤 ${model.guide.index+1} / 10</span><h3>${g[0]}</h3><p>${description}</p><div><button id="guideLocate" class="field-button">${step==='allocate' && atPower?'完成分电':g[3] || '查看任务位置'}</button><button id="skipGuide" class="text-button">跳过教程</button></div>`;
@@ -235,7 +235,7 @@ window.Expedition = (() => {
     const power=api.powerStatus(), low=power.lost>0 || g.storm>0, batteryCap=8+g.battBonus;
     $('#cabinPower').hidden=outside;$('#cabinPower').dataset.battery=String(g.batt);$('#cabinPower').dataset.loss=String(power.lost);$('#cabinPower').classList.toggle('low',low);
     $('#cabinPower').setAttribute('aria-label',`电量卡。今日发电 ${g.gen} 格。正常约 ${power.normal} 格。电池余量 ${g.batt} 格。可分配 ${g.pool} 格。${low?'发电偏低。':''}点击查看故障和用电。`);
-    $('#cabinPower').innerHTML=`<span class="power-generation"><small>今日发电</small><strong>${g.gen}<small> 格</small></strong><span>正常约 ${power.normal} 格</span></span><span class="power-battery"><small>电池余量</small><strong>${g.batt}<small> / ${batteryCap} 格</small></strong><span>可分配 ${g.pool} 格</span></span><span class="power-status"><b>${g.storm>0?'风暴影响发电':low?'发电偏低':'发电正常'}</b><small>打开电力台 →</small></span>`;
+    $('#cabinPower').innerHTML=`<span class="power-generation"><small>今日发电</small><strong>${g.gen}<small> 格</small></strong><span>正常约 ${power.normal} 格</span></span><span class="power-battery"><small>电池余量</small><strong>${g.batt}<small> / ${batteryCap} 格</small></strong><span>可分配 ${g.pool} 格</span></span><span class="power-status"><b>${g.storm>0?'风暴影响发电':low?'发电偏低':'发电正常'}</b><small>打开控制台 →</small></span>`;
     $('#fieldStats').innerHTML=`<span> 氧气 <b>${Math.round(g.o2)}</b></span><span> 发电 <b>${g.gen}</b> · 可用 <b>${g.pool}</b></span><span> 辐射 <b>${g.dose.toFixed(1)} /25</b></span>`;
     $('#missionWeather').textContent=g.storm>0?' 沙尘暴 · 留在仓内':g.today?.flareOut?' 发生太阳风暴 · 注意辐射':' 天气正常';
     const pending=model.tasks.filter(t=>t.phase!=='done');

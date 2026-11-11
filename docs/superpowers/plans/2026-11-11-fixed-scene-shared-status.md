@@ -1,8 +1,8 @@
 # Fixed scene, shared status and allocation tutorial
 
-The user corrected the layout: preserve the original full-size 2D scene, allow floating tutorials, use the term 电力台 consistently, and show the same station status inside and outside.
+The user corrected the layout: preserve the original full-size 2D scene, allow floating tutorials, use the term 控制台 consistently, and show the same station status inside and outside.
 
-Reproduced: the allocation guide continued to say 打开电力台 after the panel was open. Its card did not explain the minimum or provide a completion action. The screenshot allocation 8/2/1/2 is valid. The old full-day test only used the bottom completion button at the default allocation.
+Reproduced: the allocation guide continued to say 打开控制台 after the panel was open. Its card did not explain the minimum or provide a completion action. The screenshot allocation 8/2/1/2 is valid. The old full-day test only used the bottom completion button at the default allocation.
 
 Changes: one completion handler serves the tutorial card and bottom button; guide copy changes with view and current allocation; one station-status DOM is shared across all views; the original SVG viewBox and full-screen bounds are restored; tutorial classes no longer move or resize the scene. Resource and power calculations stay unchanged.
 

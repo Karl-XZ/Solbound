@@ -4,7 +4,7 @@ async page => {
   await page.reload();
   await page.evaluate(()=>{World.setMode('surface');document.querySelector('#title').classList.remove('on');World.reset();__dbg.newGame();__dbg.startGame();});
   await page.getByRole('button',{name:'开始教程',exact:true}).click();
-  await page.getByRole('button',{name:'电力台：查看发电和分配电力',exact:true}).click();
+  await page.getByRole('button',{name:'控制台：查看发电和分配电力',exact:true}).click();
   if(!await page.locator('#notebook').isHidden())throw Error('控制台仍然打开日记');
   if(!await page.locator('#habitatScene').isHidden())throw Error('控制台没有切换到 3D 全景');
   if(!await page.locator('#fieldDialog').isHidden())throw Error('控制台仍然先弹出说明');
@@ -31,8 +31,8 @@ async page => {
   await page.screenshot({path:'output/playwright/scene-console-restored.png'});
   await page.locator('#bGo').click();
   if(!await page.locator('#fieldDialog .night-ledger').isVisible())throw Error('控制台不能结束当天');
-  await page.locator('#fieldDialog').getByRole('button',{name:'返回电力台',exact:true}).click();
-  if(!await page.locator('#notebook').isHidden() || !await page.locator('#power').isVisible())throw Error('返回电力台又打开了日记');
+  await page.locator('#fieldDialog').getByRole('button',{name:'返回控制台',exact:true}).click();
+  if(!await page.locator('#notebook').isHidden() || !await page.locator('#power').isVisible())throw Error('返回控制台又打开了日记');
   await page.locator('#consoleReturn').click();
   if(!await page.locator('#habitatScene').isVisible())throw Error('控制台不能返回生活舱');
   return {console:'direct 3D',resources:'left',weather:'right',allocation:'bottom center',diary:'closed',EVA:'not charged'};

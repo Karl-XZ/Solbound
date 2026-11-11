@@ -499,7 +499,7 @@
     if (item === 'bench') { Habitat.closeCard(); return Expedition.analyse(); }
     const card = data => Habitat.card({ ...data, anchor: target });
     const action = (key, label, hint, allowed, change, note) => ({ label: G.care[key] ? '今天已经完成' : label, hint, disabled: !!G.care[key] || !allowed(), run: () => careForCrew(key, allowed, change, note) });
-    const bookAction = (page, label) => ({ label, hint: page === 'brief' ? '翻开今日手册' : '打开基地电力台', run: () => showJournal(true, page) });
+    const bookAction = (page, label) => ({ label, hint: page === 'brief' ? '翻开今日手册' : '打开基地控制台', run: () => showJournal(true, page) });
     if (item === 'food') return card({ title: '食物补给箱', value: `${f1(G.food)}<small>点</small>`, description: `宇航员每天消耗 ${FOOD_USE} 点食物。温室收获后会增加食物。加餐可提高心情。`, actions: [
       action('snack', '给大家加一餐', '食物 −3 · 心情 +6 · 每日一次', () => G.food >= 3 && G.morale < 100, () => { G.food -= 3; G.morale = clamp(G.morale + 6, 0, 100); }, '宇航员已加餐。食物 −3。心情最多 +6。'), bookAction('supplies', '清点生存物资')
     ] });
