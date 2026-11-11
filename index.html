@@ -303,7 +303,7 @@ button{font:inherit;color:inherit}
   </section>
 
   <section id="hud">
-    <header class="cabin-header"><div><span class="cabin-kicker"><i></i> JEZERO · HABITAT 01</span><h1>火星基地</h1><p id="cabinGreeting">请检查物资和电力。</p></div><div class="scene-switch" role="group" aria-label="基地与舱外"><button id="viewInterior" aria-pressed="true">基地生活</button><button id="viewExterior" aria-pressed="false">出舱探索</button></div></header>
+    <header class="cabin-header"><div><span class="cabin-kicker"><i></i> JEZERO · HABITAT 01</span><h1>火星基地</h1><p id="cabinGreeting">请检查物资和电力。</p></div><div class="scene-switch" role="group" aria-label="基地与舱外"><button id="viewInterior" aria-pressed="true">基地生活</button><button id="viewOverview" aria-pressed="false">3D 基地全景</button><button id="viewExterior" aria-pressed="false">出舱探索</button></div></header>
     <div class="field-mark"><span class="status-light"></span> JEZERO OUTPOST <span>18.4° N / 77.5° E</span></div>
     <nav class="notebook-shelf" aria-label="选择笔记本">
       <button id="archiveBook" class="shelf-book archive-cover" aria-expanded="false" aria-controls="notebook">
@@ -316,6 +316,8 @@ button{font:inherit;color:inherit}
         <svg viewBox="0 0 36 42" fill="none" aria-hidden="true"><path d="M9 4h21v33H9a4 4 0 0 1-4-4V8a4 4 0 0 1 4-4Z"/><path d="M10 4v33M17 18l3 3 6-7M15 28h10M5 32h25"/></svg>
         <b>今日手册</b><small id="dockSol">SOL 01</small>
       </button>
+      <button id="resourceBook" class="shelf-shortcut" aria-controls="notebook">资源仪表</button>
+      <button id="energyBook" class="shelf-shortcut" aria-controls="notebook">能源分配</button>
     </nav>
     <div id="survivalHUD" class="survival-bar" role="group" aria-label="基地资源">
       <button data-item="food" aria-label="查看食物"><span class="resource-icon">🍞</span><span>食物<b id="cabinFood">50</b></span></button>

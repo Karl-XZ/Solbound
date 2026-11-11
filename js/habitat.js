@@ -164,14 +164,17 @@ window.Habitat = (() => {
         if (el.matches('[data-object]')) el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el.dispatchEvent(new MouseEvent('click', { bubbles: true })); } });
       });
       $('#viewInterior').onclick = () => handlers.view('interior'); $('#viewExterior').onclick = () => handlers.view('exterior');
+      $('#viewOverview').onclick = () => handlers.view('overview');
       document.addEventListener('pointerdown', e => { if (!$('#itemPopover').hidden && !e.target.closest('#itemPopover, [data-object], #survivalHUD')) closeCard(); });
       addEventListener('resize', () => closeCard());
     },
     view(mode) {
-      const interior = mode === 'interior'; $('#habitatScene').hidden = !interior;
+      const interior = mode === 'interior', overview = mode === 'overview'; $('#habitatScene').hidden = !interior;
       $('#frame').classList.toggle('interior-view', interior);
-      $('#viewInterior').setAttribute('aria-pressed', String(interior)); $('#viewExterior').setAttribute('aria-pressed', String(!interior));
-      $('#viewInterior').textContent = interior ? '基地生活' : '回舱指引'; $('#viewExterior').textContent = interior ? '出舱探索' : '任务位置';
+      $('#frame').classList.toggle('overview-view', overview);
+      $('#viewInterior').setAttribute('aria-pressed', String(interior)); $('#viewExterior').setAttribute('aria-pressed', String(!interior && !overview));
+      $('#viewOverview').setAttribute('aria-pressed', String(overview)); $('#viewOverview').hidden = !interior && !overview;
+      $('#viewInterior').textContent = interior || overview ? '基地生活' : '回舱指引'; $('#viewExterior').textContent = interior || overview ? '出舱探索' : '任务位置';
       $('#roomHint').textContent = interior ? (innerWidth < 700 ? '左右滑动查找物品 · 点击舱门出舱 · 点击床结束当天' : '点击物品操作 · 点击舱门出舱 · 点击床结束当天') : 'WASD 移动 · 拖动画面转头 · 靠近目标按 E';
       World.setRendering(!interior); closeCard();
     },

@@ -234,7 +234,7 @@
     $('#missionMeters').innerHTML = `${meterRow('sci', '科学成果', 'sci')}${meterRow('dose', '辐射剂量', 'dose')}
       <div class="m-shield"><span><i class="dot shield"></i>屏蔽等级<button class="q" data-tip="shield">?</button></span><span class="lv"></span><span class="prog"></span></div>`;
     $('#power').innerHTML = `
-      <div class="p-h"><span class="p-title">分配今日电力 <small>POWER ALLOCATION</small></span><p id="powerExplanation"></p><span class="p-eq"></span></div>
+      <div class="p-h"><span class="p-title">分配今日电力 <small>POWER ALLOCATION</small></span><details class="power-details"><summary>查看发电原因</summary><p id="powerExplanation"></p></details><span class="p-eq"></span></div>
       <div class="p-tokens"></div>
       <div class="p-slots">${SLOTS.map(s => `<div class="slot" data-k="${s.k}">
           <div class="s-top"><i class="dot ${s.k}"></i><span class="s-name">${s.name}</span><button class="q" data-tipx="${s.k}">?</button></div>
@@ -455,9 +455,13 @@
     if (encounterOpen || (!G.over && $('#frame').classList.contains('nightfall'))) return;
     if (!G.over && mode === 'exterior') return Expedition.outside ? Expedition.showMap() : Expedition.requestDeparture();
     if (!G.over && mode === 'interior' && Expedition.outside) return Expedition.returnHome();
+    if (mode === 'overview') {
+      if (Expedition.outside || Expedition.busy || utilityOpen()) return;
+      World.setPlayerActive(false);
+    }
     if (G.over) World.setPlayerActive(false);
     sceneView = mode; showJournal(false); Habitat.view(mode);
-    if (mode === 'exterior') World.focus('overview');
+    if (mode === 'exterior' || mode === 'overview') World.focus('overview');
     const scroll = $('#habitatScene .room-scroll');
     if (mode === 'interior' && innerWidth < 700 && !scroll.dataset.positioned) {
       scroll.scrollLeft = (scroll.scrollWidth - scroll.clientWidth) * .48; scroll.dataset.positioned = 'true';
@@ -1010,6 +1014,12 @@
     $('#closeBook').onclick = () => { showJournal(false); $(bookType === 'today' ? '#todayBook' : '#archiveBook').focus({ preventScroll: true }); Sound.click(); };
     $('#todayBook').onclick = () => openNotebook('today');
     $('#archiveBook').onclick = () => openNotebook('archive');
+    const openDashboard = page => {
+      if (encounterOpen || Expedition.busy || G.over || $('#frame').classList.contains('nightfall')) return;
+      showJournal(true, page); Sound.click();
+    };
+    $('#resourceBook').onclick = () => openDashboard('supplies');
+    $('#energyBook').onclick = () => openDashboard('plan');
     $('#previousPage').onclick = () => flipBook(-1); $('#nextPage').onclick = () => flipBook(1);
     $('#planningNotice').onclick = () => journalPage(journalPhase === 'event' ? 'decision' : 'brief');
     $('#journalMap').innerHTML = mapSketch;
