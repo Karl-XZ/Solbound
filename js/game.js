@@ -104,6 +104,14 @@
     if (busy || encounterOpen || Expedition.busy || G.over || utilityOpen()) return;
     setSceneView('overview');
   }
+  function completeAllocation() {
+    if (busy || encounterOpen || G.over || utilityOpen() || Expedition.busy || Expedition.outside) return;
+    if (Expedition.model.guide.active && Expedition.model.step === 'allocate') {
+      if (G.alloc.o2 < 3) return Habitat.toast('制氧电量不足。请增加到 3 格。');
+      Expedition.notify('allocate'); setSceneView('interior'); return;
+    }
+    Expedition.sleep();
+  }
   function lockPlanning(locked, message = '') {
     for (const el of [$('#power'), $('#planActions')]) { el.classList.toggle('off', locked); el.inert = locked; }
     const notice = $('#planningNotice'); notice.hidden = !message; notice.textContent = message;
@@ -259,13 +267,7 @@
     });
     $('#power').onmouseleave = () => !busy && World.focus('overview');
     $('#evaDepart').onclick = () => Expedition.requestDeparture();
-    $('#bGo').onclick = () => {
-      if (Expedition.model.guide.active && Expedition.model.step === 'allocate') {
-        if (G.alloc.o2 < 3) return Habitat.toast('制氧电量不足。请增加到 3 格。');
-        Expedition.notify('allocate'); setSceneView('interior'); return;
-      }
-      Expedition.sleep();
-    };
+    $('#bGo').onclick = completeAllocation;
     document.addEventListener('click', e => { const q = e.target.closest('.q[data-tip]'); if (q) { e.stopPropagation(); showTip(q, TIPS[q.dataset.tip]); } else hideTip(); });
   }
   function setBar(k, frac, pv, val, d, cls) {
@@ -470,6 +472,7 @@
     if (mode === 'interior' && innerWidth < 700 && !scroll.dataset.positioned) {
       scroll.scrollLeft = (scroll.scrollWidth - scroll.clientWidth) * .48; scroll.dataset.positioned = 'true';
     }
+    Expedition.render(G);
   }
   function renderTodayRecords() {
     const notes = G.today.notes;
@@ -496,7 +499,7 @@
     if (item === 'bench') { Habitat.closeCard(); return Expedition.analyse(); }
     const card = data => Habitat.card({ ...data, anchor: target });
     const action = (key, label, hint, allowed, change, note) => ({ label: G.care[key] ? '今天已经完成' : label, hint, disabled: !!G.care[key] || !allowed(), run: () => careForCrew(key, allowed, change, note) });
-    const bookAction = (page, label) => ({ label, hint: page === 'brief' ? '翻开今日手册' : '打开基地控制台', run: () => showJournal(true, page) });
+    const bookAction = (page, label) => ({ label, hint: page === 'brief' ? '翻开今日手册' : '打开基地电力台', run: () => showJournal(true, page) });
     if (item === 'food') return card({ title: '食物补给箱', value: `${f1(G.food)}<small>点</small>`, description: `宇航员每天消耗 ${FOOD_USE} 点食物。温室收获后会增加食物。加餐可提高心情。`, actions: [
       action('snack', '给大家加一餐', '食物 −3 · 心情 +6 · 每日一次', () => G.food >= 3 && G.morale < 100, () => { G.food -= 3; G.morale = clamp(G.morale + 6, 0, 100); }, '宇航员已加餐。食物 −3。心情最多 +6。'), bookAction('supplies', '清点生存物资')
     ] });
@@ -1005,7 +1008,7 @@
       blockReason: evaBlocked, preview, powerStatus, refresh: () => { computePool(); renderAll(); renderTodayRecords(); renderArchive(); },
       effect: (fn, note) => { fn(); G.today.notes.push(note); computePool(); renderAll(); renderTodayRecords(); renderArchive(); },
       view: mode => { sceneView=mode;showJournal(false);Habitat.closeCard();Habitat.view(mode); },
-      plan: openConsole, endDay: endSol, inspect: inspectCabinItem
+      plan: openConsole, completeAllocation, endDay: endSol, inspect: inspectCabinItem
     });
     buildHUD(); newGame();
     $('#title').classList.add('on');

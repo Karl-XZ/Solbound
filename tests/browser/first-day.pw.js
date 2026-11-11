@@ -60,7 +60,7 @@ async (page) => {
   await page.getByRole('button',{name:'饮水桶：查看水资源与饮水休息'}).click();
   await page.getByRole('button',{name:/给宇航员喝水/}).click();
   await page.getByRole('button',{name:'电力台：查看发电和分配电力'}).click();
-  await page.locator('#bGo').click();
+  await page.locator('#guideLocate').click();
   if(await page.evaluate(()=>Expedition.model.step)!=='sleep'||!await page.locator('#notebook').isHidden())throw Error('allocation must lead to the bed');
   await page.getByRole('button',{name:'床：确认收支并结束一天'}).click();
   await page.getByRole('button',{name:'确认结束今天'}).click();

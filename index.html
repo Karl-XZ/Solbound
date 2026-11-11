@@ -305,6 +305,7 @@ button{font:inherit;color:inherit}
   </section>
 
   <section id="hud">
+    <section id="stationStatus" aria-label="前哨站状态"><div id="meters" class="card" aria-label="前哨站资源"></div></section>
     <header class="cabin-header"><div><span class="cabin-kicker"><i></i> JEZERO · HABITAT 01</span><h1>火星基地</h1><p id="cabinGreeting">请检查物资和电力。</p></div><div class="scene-switch" role="group" aria-label="基地与舱外"><button id="viewInterior" aria-pressed="true">基地生活</button><button id="viewOverview" aria-pressed="false">3D 基地全景</button><button id="viewExterior" aria-pressed="false">出舱探索</button></div></header>
     <div class="field-mark"><span class="status-light"></span> JEZERO OUTPOST <span>18.4° N / 77.5° E</span></div>
     <nav class="notebook-shelf" aria-label="选择笔记本">
@@ -330,9 +331,9 @@ button{font:inherit;color:inherit}
       <div id="cabinPowerMount"></div>
     </footer>
     <span class="room-hint" id="roomHint">点击物品进行操作。</span>
-    <section id="baseConsole" aria-label="基地控制台" hidden>
+    <section id="baseConsole" aria-label="基地电力台" hidden>
       <div id="solCard" class="card"><div class="sol-k">火星日<button class="q" data-tip="sol">?</button></div><div class="sol-n"><b id="solN">01</b><span> / 30</span></div><div class="sol-bar"><s id="solBar"></s></div></div>
-      <div id="meters" class="card" aria-label="前哨站资源"></div><div id="careMeters" hidden></div>
+      <div id="careMeters" hidden></div>
       <div id="fore" class="card"></div>
       <div id="power" class="card"></div>
       <div id="topbtns"><button class="pill" id="consoleReturn">返回生活舱</button><button class="pill" id="bComm">地球</button><button class="pill" id="bSrc">数据来源</button><button class="pill" id="bSnd">声音</button></div>
@@ -352,7 +353,7 @@ button{font:inherit;color:inherit}
           </section>
           <section class="book-page" data-book="today" data-sheet="decision" data-label="今日决定" aria-label="今日决定" hidden><div id="journalChoices"></div></section>
           <section class="book-page" data-book="today" data-sheet="weather" data-label="环境观测" aria-label="环境观测" hidden>
-            <div class="page-eyebrow">SURFACE TELEMETRY</div><h2>基地位置</h2><p class="page-subtitle">天气和资源显示在基地控制台。</p><div id="journalMap"></div>
+            <div class="page-eyebrow">SURFACE TELEMETRY</div><h2>基地位置</h2><p class="page-subtitle">天气和资源显示在基地电力台。</p><div id="journalMap"></div>
           </section>
           <div id="journalHistory"></div>
         </div>

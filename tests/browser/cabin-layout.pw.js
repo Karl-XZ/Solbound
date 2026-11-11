@@ -1,6 +1,5 @@
 async page => {
   await page.route('**/*',route=>route.continue());
-  const overlaps=(a,b)=>a.x<b.x+b.width && b.x<a.x+a.width && a.y<b.y+b.height && b.y<a.y+a.height;
   const results=[];
   for(const size of [{width:2032,height:1024},{width:1280,height:720},{width:390,height:844}]){
     await page.setViewportSize(size);await page.reload();
@@ -10,8 +9,8 @@ async page => {
     await page.locator('#cabinPower').click({trial:true});
     const dashboard=await page.locator('#cabinDashboard').boundingBox();
     if(!dashboard)throw Error('物资和电量没有集中到底部');
-    const room=await page.locator('#habitatScene').boundingBox(),header=await page.locator('.cabin-header').boundingBox();
-    if(overlaps(room,dashboard)||overlaps(room,header))throw Error('场景与状态栏或标题重叠 '+JSON.stringify(size));
+    const room=await page.locator('#habitatScene').boundingBox(),frame=await page.locator('#frame').evaluate(el=>({width:el.clientWidth,height:el.clientHeight}));
+    if(Math.abs(room.width-frame.width)>1||Math.abs(room.height-frame.height)>1)throw Error('2D 场景没有铺满原有区域');
     if(await page.locator('.mission-card').isVisible())throw Error('舱外任务仍然遮住生活舱');
     if(size.width>700){
       await page.waitForFunction(()=>[...document.querySelectorAll('#cabinDrawing .habitat-object')].every(el=>{const r=el.querySelector('.object-caption rect').getBoundingClientRect();return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.closest('[data-object]')===el;}),null,{timeout:5000});
@@ -37,5 +36,5 @@ async page => {
     if(!await page.locator('#fieldDialog').innerText().then(s=>s.includes('扫描火箭旁的地面')&&s.includes('保存')&&s.includes('科学 +6')))throw Error('出舱前没有说明扫描任务');
     results.push(size);
   }
-  return {viewports:results,layout:'separate scene and footer',emoji:'none',actions:'purifier and console',task:'concrete scan and save'};
+  return {viewports:results,layout:'full-size fixed scene',emoji:'none',actions:'purifier and console',task:'concrete scan and save'};
 }
