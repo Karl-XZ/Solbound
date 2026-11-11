@@ -33,6 +33,9 @@ window.World = (function () {
   let renderer, rt, postM, postS, postC, camera, stage, grad, FOGQ;
   let mode = 'space';
   let rendering = true;
+  const player = AstronautController.create();
+  let playerEnabled = false, inputEnabled = false, markerGroup;
+  const sites = {}, markers = [], blockers = [], cameraBlockers = [];
   const S = {}, SP = {}, B = {};
   const st = { tod: .71, night: 0, storm: 0, stormT: 0, flash: 0, aurora: 0, auroraT: 0, signal: 0, frost: 0, alarm: 0 };
   const vis = { o2: 60, food: 50, dosePct: 0, batt: 4, battCap: 8, battBonus: 0, shieldLv: 1, shieldWork: 0, o2Work: 3, foodWork: 2, sciWork: 2, eva: false,
@@ -654,13 +657,18 @@ window.World = (function () {
     B.dish.rotation.z = v.conj ? Math.sin(t * .3) * .4 : 0;
     B.antBeacon.visible = !v.conj && (t % 1.6) < .3;
     B.sci.forEach(o => { if (o.userData.drill) o.userData.drill.rotation.y += dt * v.sciWork * 3; if (o.userData.tele) o.userData.tele.rotation.y = Math.sin(t * .1) * (v.sciWork ? 1 : .1); if (o.userData.flag) o.userData.flag.rotation.y = Math.sin(t * 2) * .2; });
-    // 宇航员：出舱就走向三角洲，否则回到基地旁
+    // User control takes priority over the decorative automatic walk.
     const goal = v.eva ? V3(-26.5, 0, -19) : V3(4, 0, 10);
     const d = V3(goal.x - B.astroPos.x, 0, goal.z - B.astroPos.z), dist = d.length();
-    const moving = dist > .3; if (moving) { B.astroPos.addScaledVector(d.normalize(), Math.min(dist, dt * 9)); B.astro.rotation.y = Math.atan2(d.x, d.z); }
+    let moving = dist > .3;
+    if (playerEnabled) {
+      player.setActive(inputEnabled); player.update(dt, B.astroPos, blockers);
+      moving = player.moving; B.astro.rotation.y = player.facing;
+    } else if (moving) { B.astroPos.addScaledVector(d.normalize(), Math.min(dist, dt * 9)); B.astro.rotation.y = Math.atan2(d.x, d.z); }
     else { B.astro.rotation.y = v.eva ? Math.atan2(-30 - B.astroPos.x, -22 - B.astroPos.z) : Math.atan2(sd.x, sd.z); }
     B.astro.position.set(B.astroPos.x, H(B.astroPos.x, B.astroPos.z), B.astroPos.z); walkPose(B.astro, t, moving);
     B.astro.visible = !v.shelter && !B.crew[0].visible;
+    markers.forEach(m => { m.ring.rotation.z += dt * .3; m.beacon.position.y = 3.6 + Math.sin(t * 2) * .25; });
     anchors.astro.set(B.astroPos.x, B.astro.position.y + 4.6, B.astroPos.z);
     // 锻炼的队友绕着枢纽慢跑
     B.runner.visible = v.exercise && !v.shelter && st.night < .5 && !B.crew[0].visible;
@@ -700,7 +708,16 @@ window.World = (function () {
     pods: t => [V3(40, 9, 24), V3(28, 2, 8)]
   };
   function updateCamera(t, dt) {
-    const want = cam.override ? cam.override(t) : (POSES[cam.focus] || POSES.overview)(t);
+    let want;
+    if (playerEnabled && !cam.override) {
+      const p = B.astro.position, look = p.clone().add(V3(0, 2.6, 0));
+      const offset = V3(Math.sin(player.yaw) * 12, 5 + player.pitch * 9, Math.cos(player.yaw) * 12);
+      const desired = look.clone().add(offset), ray = new THREE.Raycaster(look, offset.clone().normalize(), .8, offset.length());
+      const hits = ray.intersectObjects(cameraBlockers, true);
+      if (hits.length) desired.copy(look).addScaledVector(offset.normalize(), Math.max(2.5, hits[0].distance - .7));
+      desired.y = Math.max(desired.y, H(desired.x, desired.z) + 2);
+      want = [desired, look];
+    } else want = cam.override ? cam.override(t) : (POSES[cam.focus] || POSES.overview)(t);
     const k = cam.override && cam.override.hard ? 1 : 1 - Math.exp(-dt * 1.5);
     cam.pos.lerp(want[0], k); cam.tgt.lerp(want[1], k);
     camera.position.copy(cam.pos); camera.lookAt(cam.tgt);
@@ -827,6 +844,28 @@ window.World = (function () {
   }
 
   /* ======================= 对外接口 ======================= */
+  function buildPlayerSites() {
+    B.base.updateMatrixWorld(true);
+    blockers.length = cameraBlockers.length = 0;
+    const obstacle = object => {
+      if (!object.visible) return;
+      const b = new THREE.Box3();
+      object.traverseVisible(child => { if (child.isMesh) { child.geometry.computeBoundingBox();b.union(child.geometry.boundingBox.clone().applyMatrix4(child.matrixWorld));cameraBlockers.push(child); } });
+      blockers.push({ minX: b.min.x, maxX: b.max.x, minZ: b.min.z, maxZ: b.max.z });
+      return b;
+    };
+    blockers.push({ x: 0, z: 0, r: 3.5 }); cameraBlockers.push(B.hub);
+    B.mods.forEach(obstacle);
+    B.domes.forEach((d, i) => { if (d.visible) { blockers.push({x: DOMES[i].x, z: DOMES[i].z, r: 4.4}); cameraBlockers.push(d); obstacle(d.userData.tube); } });
+    const solar = obstacle(B.arr); obstacle(B.bat); const oxygen = obstacle(B.o2);
+    blockers.push({x:-17,z:26,r:2.6},{x:-6,z:-12,r:.8},{x:-30,z:-22,r:2.1});
+    cameraBlockers.push(B.rocket,B.ant);
+    Object.assign(sites, {
+      door: { x: 2, z: 12 }, solar: { x: solar.max.x + 2.5, z: (solar.min.z + solar.max.z) / 2 },
+      o2: { x: oxygen.min.x - 2.5, z: oxygen.max.z + 2.5 }, rock: { x: -27, z: -18 },
+      survey: { x: -20, z: 23 }, walk: { x: 11, z: 17 }
+    });
+  }
   return {
     init(el) {
       stage = el;
@@ -841,10 +880,30 @@ window.World = (function () {
       rt = new THREE.WebGLRenderTarget(4, 4, { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
       rt.depthTexture = new THREE.DepthTexture(4, 4); rt.depthTexture.type = THREE.UnsignedIntType;
       buildSpace(); buildSurface(); buildPost(); applyVis(true);
+      buildPlayerSites(); markerGroup = new THREE.Group(); S.scene.add(markerGroup);
+      let drag = null;
+      renderer.domElement.addEventListener('pointerdown', e => { if (playerEnabled && inputEnabled) { drag = {x:e.clientX,y:e.clientY,id:e.pointerId}; renderer.domElement.setPointerCapture(e.pointerId); } });
+      renderer.domElement.addEventListener('pointermove', e => { if (!drag || !inputEnabled) return; player.yaw -= (e.clientX-drag.x)*.006; player.pitch = Math.max(-.12,Math.min(.8,player.pitch+(e.clientY-drag.y)*.004)); drag.x=e.clientX;drag.y=e.clientY; });
+      for (const event of ['pointerup','pointercancel','lostpointercapture']) renderer.domElement.addEventListener(event,()=>{drag=null;});
       addEventListener('resize', resize); resize();
       requestAnimationFrame(frame);
     },
     get mode() { return mode; },
+    get controller() { return player; },
+    setPlayerActive(active) { playerEnabled = active; inputEnabled = active; player.setActive(active); if (active) { cam.override = null; player.yaw = 0; buildPlayerSites(); } },
+    setPlayerInput(active) { inputEnabled = active && playerEnabled; player.setActive(inputEnabled); },
+    getPlayer() { return { x:B.astroPos.x, z:B.astroPos.z, yaw:player.yaw, active:playerEnabled }; },
+    resetPlayer() { B.astroPos.set(sites.door.x,0,sites.door.z); player.clear(); player.yaw=0; },
+    getSite(name) { return sites[name] || sites.rock; },
+    setMarkers(entries) {
+      markers.forEach(m => { m.ring.geometry.dispose();m.ring.material.dispose(); m.beacon.geometry.dispose();m.beacon.material.dispose(); }); markers.length=0;
+      markerGroup.clear();
+      entries.forEach(e => { const p=sites[e.target] || e, color=e.done?0x7fae5b:0xffdf79;
+        const ring=new THREE.Mesh(new THREE.RingGeometry(1.5,1.8,36),new THREE.MeshBasicMaterial({color,side:THREE.DoubleSide,transparent:true,opacity:.85}));
+        ring.rotation.x=-Math.PI/2;ring.position.set(p.x,H(p.x,p.z)+.08,p.z);markerGroup.add(ring);
+        const beacon=new THREE.Mesh(new THREE.OctahedronGeometry(.55,0),new THREE.MeshBasicMaterial({color}));beacon.position.set(p.x,3.6,p.z);markerGroup.add(beacon);markers.push({ring,beacon});
+      });
+    },
     setRendering(active) { rendering = active; },
     setMode(m) { mode = m; },
     playIntro(cues, cb) { introAnim = { t0: performance.now(), cues: cues.slice().sort((a, b) => a.t - b.t), cb }; },
@@ -866,6 +925,7 @@ window.World = (function () {
     releaseCamera() { cam.override = null; B.crew.forEach(a => a.visible = false); B.crewPods.forEach(c => c.visible = false);
       B.rocket.position.set(0, .4, 0); B.rocket.rotation.set(0, 0, 0); B.rocket.userData.flame.visible = false; st.alarm = 0; st.auroraT = 0; },
     reset() {
+      playerEnabled = inputEnabled = false; player.setActive(false); if (markerGroup) this.setMarkers([]);
       B.rows.forEach((r, i) => r.visible = i < 2); B.domes.forEach((d, i) => { d.visible = d.userData.tube.visible = i === 0; });
       B.mods.forEach((m, i) => m.visible = i < 2); B.tanks.forEach((t, i) => t.visible = i < 2); B.sci.forEach(o => o.visible = false);
       B.evaFlags.forEach(f => f.visible = false); B.pods.forEach(p => p.visible = false); B.sandbags.visible = false;

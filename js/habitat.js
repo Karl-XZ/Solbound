@@ -82,7 +82,7 @@ window.Habitat = (() => {
       <g class="object-caption"><rect x="0" y="133" width="84" height="25" rx="7.2"/><text x="42" y="150">饮用水</text></g>
     </g></g>
     <!-- A soft bed, spare boots and the first-aid cabinet. -->
-    <g stroke="#29343b" stroke-width="4"><rect x="925" y="648" width="177" height="66" rx="13.2" fill="#8c735b"/><path d="M943 712v20m141-20v20" stroke-width="9" stroke-linecap="round"/><rect x="915" y="628" width="194" height="61" rx="16.8" fill="#d7bc8b"/><rect x="980" y="619" width="134" height="61" rx="14.4" fill="#648d9d" stroke="#29343b"/><path d="M994 633h105m-100 16h106" stroke="#c5d7d8" stroke-width="3"/><rect x="924" y="631" width="56" height="36" rx="10.2" fill="#fff1d5" stroke="#29343b" stroke-width="3"/></g>
+    <g class="habitat-object" data-object="bed" role="button" tabindex="0" aria-label="床：确认收支并结束一天"><title>休息 · 看看今晚的收支</title>    <g class="object-art" stroke="#29343b" stroke-width="4"><rect x="925" y="648" width="177" height="66" rx="13.2" fill="#8c735b"/><path d="M943 712v20m141-20v20" stroke-width="9" stroke-linecap="round"/><rect x="915" y="628" width="194" height="61" rx="16.8" fill="#d7bc8b"/><rect x="980" y="619" width="134" height="61" rx="14.4" fill="#648d9d" stroke="#29343b"/><path d="M994 633h105m-100 16h106" stroke="#c5d7d8" stroke-width="3"/><rect x="924" y="631" width="56" height="36" rx="10.2" fill="#fff1d5" stroke="#29343b" stroke-width="3"/></g><g class="object-caption"><rect x="975" y="741" width="105" height="26" rx="7"/><text x="1027" y="759">休息，迎接明天</text></g></g>
     <g class="habitat-object" data-object="medicine" role="button" tabindex="0" aria-label="急救箱：查看和使用药品" transform="translate(979 331)"><title>急救箱 · 照顾好自己，也是任务</title><g class="object-art">
       <rect x="-5" y="6" width="109" height="84" rx="10.2" fill="#9c887445"/><rect x="24" y="-11" width="52" height="24" rx="5.4" fill="none" stroke="#29343b" stroke-width="6"/>
       <rect width="100" height="81" rx="9.6" fill="#f9e5b9" stroke="#29343b" stroke-width="4"/><path d="M1 26h98" stroke="#dcc8ab" stroke-width="3"/><rect x="36" y="21" width="28" height="46" rx="3" fill="#c9694f"/><rect x="27" y="30" width="46" height="28" rx="3" fill="#c9694f"/>
@@ -145,6 +145,9 @@ window.Habitat = (() => {
       <path d="M-12 91h48" stroke="#d8dec2" stroke-width="2"/>
       <g class="object-caption"><rect x="-42" y="294" width="108" height="25" rx="4"/><text x="12" y="311">宇航员 · 阿星</text></g>
     </g></g>
+    <g class="habitat-object" data-object="door" role="button" tabindex="0" aria-label="舱门：检查装备并出舱" transform="translate(385 264)"><title>舱门 · 准备好再出发</title><g class="object-art"><rect width="99" height="256" rx="35" fill="#577d78" stroke="#29343b" stroke-width="5"/><rect x="13" y="19" width="73" height="217" rx="29" fill="#bacabd" stroke="#29343b" stroke-width="3"/><circle cx="49" cy="73" r="24" fill="#ba7958" stroke="#29343b" stroke-width="4"/><path d="m31 77 16-16 20 16" fill="none" stroke="#efd2a0" stroke-width="3"/><rect x="70" y="141" width="13" height="32" rx="4" fill="#eac474" stroke="#29343b" stroke-width="3"/><path d="M25 216h49" stroke="#597f75" stroke-width="5"/><g class="object-caption"><rect x="-2" y="270" width="103" height="26" rx="7"/><text x="49" y="288">舱门 · 去探索</text></g></g></g>
+    <g class="habitat-object" data-object="console" role="button" tabindex="0" aria-label="电力台：查看发电和分配电力" transform="translate(485 631)"><title>电力控制台 · 每一格电都有用</title><g class="object-art"><path d="M4 68v53m142-53v53" stroke="#29343b" stroke-width="9"/><path d="m0 0 140 0 15 75H-15Z" fill="#709186" stroke="#29343b" stroke-width="4"/><rect x="11" y="13" width="118" height="43" rx="7" fill="#2f5356" stroke="#29343b" stroke-width="3"/><text x="70" y="40" text-anchor="middle" fill="#f4df96" font-size="16" id="consoleGeneration">发电 7 格</text><circle cx="22" cy="64" r="5" fill="#e1bf70"/><circle cx="45" cy="64" r="5" fill="#c1d79e"/><path d="M79 64h38" stroke="#f1d7a5" stroke-width="4"/><g class="object-caption"><rect x="9" y="128" width="124" height="26" rx="7"/><text x="71" y="146">电力台 · 安排工作</text></g></g></g>
+    <g class="habitat-object" data-object="bench" role="button" tabindex="0" aria-label="实验台：分析带回的岩样" transform="translate(170 456)"><title>实验台 · 看看样品的秘密</title><g class="object-art"><rect x="-12" y="-20" width="175" height="150" fill="transparent" pointer-events="all"/><path d="M3 44v48m135-48v48" stroke="#29343b" stroke-width="8"/><rect x="-8" y="27" width="160" height="25" rx="5" fill="#7d9e8e" stroke="#29343b" stroke-width="4"/><path d="M25 26V5l18-17 13 9-16 20v9" fill="#446b75" stroke="#29343b" stroke-width="3"/><rect x="11" y="20" width="48" height="8" rx="3" fill="#e8c77b" stroke="#29343b" stroke-width="2"/><g id="drawnSample" opacity=".2"><rect x="83" y="-4" width="47" height="31" rx="5" fill="#eacb83" stroke="#29343b" stroke-width="3"/><path d="m95 15 4-12 13-3 8 13-8 8Z" fill="#ab7054" stroke="#29343b" stroke-width="2"/></g><g class="object-caption"><rect x="5" y="100" width="130" height="26" rx="7"/><text x="70" y="118" id="sampleCount">实验台 · 等待样品</text></g></g></g>
     <g id="crewSpeech" transform="translate(602 369)"><path d="M0 0q0-12 12-12h159q12 0 12 12v31q0 12-12 12h-18l17 20-35-20H12Q0 43 0 31Z" fill="#fff1cd" stroke="#29343b" stroke-width="3"/><text id="crewSpeechText" x="92" y="19" text-anchor="middle" fill="#29343b" font-size="11" font-weight="700">今天的任务？包在我身上！</text></g>
     <g fill="#b8ac91" opacity=".7"><circle cx="210" cy="178" r="4"/><circle cx="1230" cy="178" r="4"/><circle cx="1312" cy="483" r="4"/><circle cx="131" cy="483" r="4"/></g>
   </svg></div><div class="room-night" aria-hidden="true"></div>`;
@@ -168,10 +171,12 @@ window.Habitat = (() => {
       const interior = mode === 'interior'; $('#habitatScene').hidden = !interior;
       $('#frame').classList.toggle('interior-view', interior);
       $('#viewInterior').setAttribute('aria-pressed', String(interior)); $('#viewExterior').setAttribute('aria-pressed', String(!interior));
-      $('#roomHint').textContent = interior ? (innerWidth < 700 ? '左右滑动探索 · 在今日手册中结束一天。' : '点击物品互动 · 结束一天请翻开「今日手册」。') : '这里是保留下来的 3D 火星前哨站。';
+      $('#viewInterior').textContent = interior ? '基地生活' : '回舱指引'; $('#viewExterior').textContent = interior ? '出舱探索' : '舱外地图';
+      $('#roomHint').textContent = interior ? (innerWidth < 700 ? '左右滑动找物品 · 点舱门出发，点床休息。' : '点物品照顾生活 · 点舱门去探索 · 点床迎接明天。') : 'WASD 移动 · 拖动画面转头 · 靠近目标按 E';
       World.setRendering(!interior); closeCard();
     },
     render(g) {
+      $('#consoleGeneration').textContent = `发电 ${g.gen} 格`;
       $('#cabinFood').textContent = Math.round(g.food); $('#cabinWater').textContent = Math.round(g.water); $('#cabinMeds').textContent = g.meds; $('#cabinMorale').textContent = Math.round(g.morale);
       $('#cabinDay').innerHTML = `${String(g.sol).padStart(2, '0')}<small> / 30</small>`; $('#calendarNumber').textContent = String(g.sol).padStart(2, '0');
       const mood = g.morale < 30 || g.food < 10 || g.water < 10 ? 'weak' : g.morale < 60 || g.food < 20 || g.water < 20 ? 'sad' : 'happy';
@@ -182,6 +187,11 @@ window.Habitat = (() => {
       for (const [id, value, limit] of [['food',g.food,20],['water',g.water,20],['medicine',g.meds,1],['crew',g.morale,30]]) {
         document.querySelector(`#survivalHUD [data-item="${id}"]`).classList.toggle('low', value < limit);
       }
+    },
+    samples(samples) {
+      const pending=samples.filter(s=>s.status==='stored').length, analysed=samples.filter(s=>s.status==='analysed').length;
+      $('#drawnSample').setAttribute('opacity', pending || analysed ? '1' : '.2');
+      $('#sampleCount').textContent = pending ? `实验台 · ${pending} 份待分析` : analysed ? `已分析 ${analysed} 份岩样` : '实验台 · 等待样品';
     },
     card({ icon, title, value, description, actions = [], anchor: target }) {
       anchor = target;

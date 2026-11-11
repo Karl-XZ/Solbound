@@ -140,14 +140,19 @@
   const sepFac = lv => .8 - .13 * lv;   // 舱内受到的太阳风暴粒子比例
 
   function newGame() {
+    if (document.querySelector('#expeditionUI')) Expedition.reset();
+    busy = false; encounterOpen = false; journalPhase = 'planning';
+    $('#dailyEventModal').hidden = true; $('#hud').inert = false; $('#habitatScene').inert = false;
+    $('#modal').classList.remove('on','result'); $('#sources').classList.remove('on');
+    $('#frame').classList.remove('nightfall','notebook-open');
     bookType = 'today'; todaySheet = 'brief'; archiveIndex = 0;
-    G = { water: 70, meds: 4, morale: 75, care: {}, cabinDeck: [], sol: 1, o2: 60, food: 50, dose: 0, sci: 0, batt: 4, shieldLv: 1, shieldProg: 0, panelEff: 1, queue: [3, 3, 3],
+    G = { water: 55, meds: 4, morale: 75, care: {}, cabinDeck: [], sol: 1, o2: 60, food: 50, dose: 0, sci: 0, batt: 6, shieldLv: 1, shieldProg: 0, panelEff: .72, queue: [3, 3, 3],
       alloc: { o2: 3, food: 2, shield: 1, sci: 2 }, want: { o2: 3, food: 2, shield: 1, sci: 2 }, eva: false,
       o2Rate: 2.5, o2Mul: 1, o2MulDays: 0, storm: 0, stormMul: .3, stormSave: false, battBonus: 0,
       evaLock: 0, conj: 0, conjRisk: 0, exercise: 0, health: 3, drain: 0, drainDays: 0, dirtyShown: false,
       hist: [], decisions: [], doseParts: { gcr: 0, sep: 0, eva: 0 }, powerUse: { o2: 0, food: 0, shield: 0, sci: 0 },
       flareSols: [], over: false,
-      build: { rows: 2, domes: 1, labs: 0 }, evaCount: 0, sample: false, pods: 0, damaged: 0, blight: 0, blightFix: false, cull: 0, o2Fault: 0, o2FaultDays: 0 };
+      build: { rows: 2, domes: 1, labs: 0 }, evaCount: 0, sample: false, pods: 0, damaged: 1, blight: 0, blightFix: false, cull: 0, o2Fault: 0, o2FaultDays: 0 };
     schedule();
   }
   function schedule() {
@@ -196,13 +201,13 @@
     const a = G.alloc, T = G.today;
     const short = Math.max(0, -G.pool);
     const o2Prod = a.o2 * G.o2Rate * G.o2Mul;
-    const o2 = o2Prod - O2_USE - (G.eva ? 3 : 0) - G.exercise - short * 3;
+    const o2 = o2Prod - O2_USE - G.exercise - short * 3;
     const harvest = G.queue[0];
     const food = harvest - FOOD_USE;
     const gcr = F.radSurface * hab(G.shieldLv);
-    const evaDose = G.eva ? .25 + T.flareOut : 0;
+    const evaDose = 0;
     const dose = gcr + evaDose + T.flareDose;
-    const sci = (sciLocked() ? 0 : a.sci * sciPer()) + (G.eva ? 6 : 0);
+    const sci = sciLocked() ? 0 : a.sci * sciPer();
     const left = Math.max(0, G.pool) - used();
     const batt = Math.min(BATT_MAX + G.battBonus, left);
     let lv = G.shieldLv, prog = G.shieldProg + a.shield; while (prog >= 5 && lv < 5) { lv++; prog -= 5; }
@@ -229,9 +234,9 @@
           <div class="s-eff"></div></div>`).join('')}</div>`;
     $('#planActions').innerHTML = `
       <div class="p-foot">
-        <label class="eva"><input type="checkbox" id="evaChk"><span class="sw"></span><span><b>出舱考察</b><button class="q" data-tip="eva">?</button><small class="eva-sub">科学 +6 · 氧气 −3 · 辐射 +0.25</small></span></label>
+        <button class="field-button" id="evaDepart">经舱门出发探索</button>
         <span class="p-left"></span>
-        <button class="btn go" id="bGo">确认安排，结束今天 <small>NEXT SOL</small><span>→</span></button>
+        <button class="btn go" id="bGo">安排好了，准备休息 <small>NEXT SOL</small><span>→</span></button>
       </div>`;
     SLOTS.forEach(s => {
       const el = $(`.slot[data-k="${s.k}"]`);
@@ -241,8 +246,8 @@
       el.querySelector('[data-tipx]').onclick = e => { e.stopPropagation(); showTip(e.target, `<b>${s.name}</b><br>${s.tip}`); };
     });
     $('#power').onmouseleave = () => !busy && World.focus('overview');
-    $('#evaChk').onchange = e => { if (busy) { e.target.checked = G.eva; return; } const b = evaBlocked(); if (b) { e.target.checked = false; return nudge($('.eva'), b); } G.eva = e.target.checked; World.focus(G.eva ? 'eva' : 'overview'); Sound.click(); renderAll(); };
-    $('#bGo').onclick = () => endSol();
+    $('#evaDepart').onclick = () => Expedition.requestDeparture();
+    $('#bGo').onclick = () => { if (G.alloc.o2 >= 3) Expedition.notify('allocate'); Expedition.sleep(); };
     document.addEventListener('click', e => { const q = e.target.closest('.q[data-tip]'); if (q) { e.stopPropagation(); showTip(q, TIPS[q.dataset.tip]); } else hideTip(); });
   }
   function setBar(k, frac, pv, val, d, cls) {
@@ -282,7 +287,7 @@
       const el = $(`.slot[data-k="${s.k}"]`), n = G.alloc[s.k];
       el.querySelector('.s-n').textContent = n;
       el.classList.toggle('locked', s.k === 'sci' && sciLocked());
-      const eff = s.k === 'o2' ? `+${f1(p.o2Prod)} 氧气<small>需要 ${O2_USE + (G.eva ? 3 : 0) + G.exercise}</small>`
+      const eff = s.k === 'o2' ? `+${f1(p.o2Prod)} 氧气<small>今晚需要 ${O2_USE + G.exercise}</small>`
         : s.k === 'food' ? `+${f1(n * foodPer())} 食物<small>3 天后收获${G.build.domes > 1 ? ` · ${G.build.domes} 座温室` : ''}</small>`
         : s.k === 'shield' ? (G.shieldLv >= 5 ? '已满级<small>不再需要</small>' : `施工 ${G.shieldProg}+${n}/5<small>${p.lv > G.shieldLv ? '明天升级！' : '攒够 5 格升一级'}</small>`)
         : sciLocked() ? '暂停<small>今天无法科研</small>' : `+${f1(n * sciPer())} 科学<small>每格 ${f1(sciPer())}${G.build.labs ? ' · 实验舱加成' : ''}</small>`;
@@ -291,8 +296,7 @@
     });
     const left = p.left;
     $('.p-left').innerHTML = G.pool < 0 ? '' : left > 0 ? `剩 <b>${left}</b> 格 → ${p.wasted ? `电池满了，<b class="bad">浪费 ${p.wasted} 格</b>` : '存进电池'}` : '电全部分配完';
-    const eb = evaBlocked(); $('#evaChk').checked = G.eva; $('.eva').classList.toggle('locked', !!eb);
-    $('.eva-sub').textContent = eb || `科学 +6 · 氧气 −3 · 辐射 +${f1(.25 + G.today.flareOut)}`;
+    const eb = evaBlocked(); $('#evaDepart').textContent = eb || '经舱门出发探索'; $('#evaDepart').disabled = !!eb;
     // 环境
     const sun = Math.round(G.sunVar * (G.storm > 0 ? G.stormMul : 1) * 100);
     const tau = G.storm > 0 ? (G.stormSave ? 6.2 : 6.8) : (.4 + (1 - G.sunVar) * 3).toFixed(1);
@@ -306,7 +310,7 @@
       ${G.storm > 0 ? `<div class="f-alert">沙尘暴还剩 ${G.storm} 天</div>` : nextStorm ? `<div class="f-alert">沙尘暴明天到达</div>` : ''}`;
     $('#solN').textContent = String(G.sol).padStart(2, '0'); $('#solBar').style.width = (G.sol - 1) / SOLS * 100 + '%';
     $('#journalDay').textContent = String(G.sol).padStart(2, '0'); $('#dockSol').textContent = `SOL ${String(G.sol).padStart(2, '0')}`;
-    syncWorld(); Habitat.render(G);
+    syncWorld(); Habitat.render(G); Expedition.render(G);
   }
   const tanks = () => Math.min(7, 2 + Math.floor(G.powerUse.o2 / 18) + (G.o2Rate > 2.5 ? 2 : 0));
   function syncWorld(extra) {
@@ -343,16 +347,15 @@
     busy = false; lockPlanning(false); dailyEntry(); renderArchive();
     showJournal(false, 'log'); renderTodayRecords(); renderAll();
     World.focus('overview');
+    Expedition.newDay(G);
+    let id = G.events[G.sol];
+    if (!id && G.sol > 1 && !G.dirtyShown && G.panelEff < .82 && G.storm === 0) { id = 'dirty'; G.dirtyShown = true; }
+    if (id) { busy = true; lockPlanning(true); openEvent(id, () => { busy = false; lockPlanning(false); renderAll(); }); }
   }
   function endSol() {
-    if ($('#notebook').hidden || bookType !== 'today' || todaySheet !== 'plan') return;
-    if (busy || encounterOpen || G.over || utilityOpen()) return;
+    if (busy || encounterOpen || G.over || utilityOpen() || Expedition.outside || Expedition.busy) return;
     busy = true; lockPlanning(true); showJournal(false); Habitat.closeCard();
-    let id = G.events[G.sol];
-    if (!id && !G.dirtyShown && G.panelEff < .82 && G.storm === 0) { id = 'dirty'; G.dirtyShown = true; }
-    renderAll();
-    if (id) openEvent(id, settleSol);
-    else presentEncounter(nextCabinEvent(), settleSol, true);
+    settleSol();
   }
   function settleSol() {
     busy = true; lockPlanning(true); showJournal(false); Sound.click();
@@ -366,23 +369,21 @@
     G.food = clamp(G.food + p.food, 0, 100);
     G.queue = [G.queue[1], G.queue[2], a.food * foodPer()];
     const lvBefore = G.shieldLv; G.shieldLv = p.lv; G.shieldProg = G.shieldLv >= 5 ? 0 : p.prog;
-    G.dose += p.dose; G.doseParts.gcr += p.gcr; G.doseParts.eva += p.evaDose - (G.eva ? T.flareOut : 0); G.doseParts.sep += T.flareDose + (G.eva ? T.flareOut : 0);
+    G.dose += p.dose; G.doseParts.gcr += p.gcr; G.doseParts.sep += T.flareDose;
     const sciBefore = G.sci, tanksBefore = tanks();
     G.sci += p.sci;
     G.batt = Math.max(0, p.batt);
-    if (G.eva) { G.evaCount++; notes.push(`出舱考察完成，三角洲上又插了一面考察旗（第 ${G.evaCount} 面）。`); }
     for (const k in a) G.powerUse[k] += a[k];
     const SCI_PARTS = [[15, '地震仪'], [35, '岩芯钻机'], [55, '天文望远镜'], [80, '样本存放架'], [100, '科学目标达成旗']];
     for (const [th, name] of SCI_PARTS) if (sciBefore < th && G.sci >= th) notes.push(`科学成果达到 ${th}：科学站新添了一台<b>${name}</b>！`);
     if (tanks() > tanksBefore) notes.push('持续给制氧分电，制氧站旁边又立起了一个<b>储氧罐</b>。');    // 日凌期间出舱的风险
-    if (G.eva && G.conjRisk > 0 && rng() < .34) { G.o2 = Math.max(0, G.o2 - 6); notes.push('出舱时宇航服的阀门出了点小问题，地球又联系不上——你们自己修好了它，但漏掉了一些氧气（−6）。'); }
     // 因果说明
     if (p.short) notes.push(`电不够供暖，生命保障降级运行：氧气额外 −${p.short * 3}。`);
-    if (p.o2 < 0) notes.push(`氧气 ${fmt(p.o2)}：制氧只产出 ${f1(p.o2Prod)}，而乘组用掉了 ${O2_USE + (G.eva ? 3 : 0) + G.exercise}。`);
+    if (p.o2 < 0) notes.push(`氧气 ${fmt(p.o2)}：制氧只产出 ${f1(p.o2Prod)}，而乘组用掉了 ${O2_USE + G.exercise}。`);
     else notes.push(`氧气 ${fmt(p.o2)}：制氧产出 ${f1(p.o2Prod)}，够用。`);
     notes.push(p.harvest > .05 ? `温室收获 ${f1(p.harvest)} 份食物，吃掉 ${FOOD_USE}。` : `温室这天没有收获（3 天前没给温室分电），食物 −${FOOD_USE}。`);
     if (G.shieldLv > lvBefore) notes.push(`屏蔽升到 ${G.shieldLv} 级！从今以后，每天的辐射都会少一点。`);
-    if (T.flareDose + (G.eva ? T.flareOut : 0) > 0) notes.push(`太阳风暴让你们多受了 ${f1(T.flareDose + (G.eva ? T.flareOut : 0))} 毫希辐射。`);
+    if (T.flareDose > 0) notes.push(`太阳风暴让舱内乘组多受了 ${f1(T.flareDose)} 毫希辐射；出舱额外剂量已在出发时记录。`);
     if (p.wasted) notes.push(`电池满了，${p.wasted} 格电被浪费掉。`);
     // 持续效果
     G.panelEff = Math.max(.5, G.panelEff - .012 - (G.storm > 0 ? .02 : 0));
@@ -436,6 +437,9 @@
   /* ======================= 生活舱交互 ======================= */
   function setSceneView(mode) {
     if (encounterOpen || (!G.over && $('#frame').classList.contains('nightfall'))) return;
+    if (!G.over && mode === 'exterior') return Expedition.outside ? Expedition.showMap() : Expedition.requestDeparture();
+    if (!G.over && mode === 'interior' && Expedition.outside) return Expedition.returnHome();
+    if (G.over) World.setPlayerActive(false);
     sceneView = mode; showJournal(false); Habitat.view(mode);
     if (mode === 'exterior') World.focus('overview');
     const scroll = $('#habitatScene .room-scroll');
@@ -452,10 +456,15 @@
     change(); G.care[key] = true; G.today.notes.push(note);
     computePool(); renderAll(); renderTodayRecords(); renderArchive();
     Habitat.toast(note); inspectCabinItem(item, target);
+    Expedition.notify(key);
   }
   function inspectCabinItem(item, target) {
     if (!G.today || G.over || busy || encounterOpen || utilityOpen()) return;
     showJournal(false); Sound.click();
+    if (item === 'door') { Habitat.closeCard(); return Expedition.requestDeparture(); }
+    if (item === 'console') { Habitat.closeCard(); Expedition.notify('console'); return showJournal(true, 'plan'); }
+    if (item === 'bed') { Habitat.closeCard(); return Expedition.sleep(); }
+    if (item === 'bench') { Habitat.closeCard(); return Expedition.analyse(); }
     const card = data => Habitat.card({ ...data, anchor: target });
     const action = (key, label, hint, allowed, change, note) => ({ label: G.care[key] ? '今天已经完成' : label, hint, disabled: !!G.care[key] || !allowed(), run: () => careForCrew(key, allowed, change, note, item, target) });
     const bookAction = (page, label) => ({ label, hint: '翻开今日手册', run: () => showJournal(true, page) });
@@ -519,7 +528,7 @@
   function presentEncounter(e, resolved, daily) {
     encounterOpen = true; journalPhase = 'event'; Habitat.closeCard(); showJournal(false);
     if (daily) G.today.eventId = e.id || 'cabin';
-    let options = ['build','resupply'].includes(e.id) ? shuffle(e.choices.slice()).slice(0,2) : e.choices.slice(0,2);
+    let options = e.choices.slice();
     const defer = { t: '保留资源，先照顾基地', d: [chip('none', '不消耗额外物资')], fn: () => '你保留了手边的资源，按原计划继续今天的生活。' };
     while (options.length < 2) options.push(defer);
     if (options.every(c => c.disabled)) options[1] = e.choices.find(c => !c.disabled) || defer;
@@ -532,7 +541,14 @@
     let answered = false;
     panel.querySelectorAll('[data-option]').forEach(button => button.onclick = () => {
       if (answered) return; answered = true;
-      const c = options[Number(button.dataset.option)], result = c.fn();
+      const c = options[Number(button.dataset.option)];
+      let result;
+      if (c.work) {
+        const queued = Expedition.queueWork({ ...c.work, id: `${e.id}-${G.sol}-${button.dataset.option}`, title: c.t, complete: () => {
+          const text = c.fn(); G.today.notes.push(`${c.t}：${text}`); return text;
+        } });
+        result = queued ? '已标记现场任务，请经舱门出发，走到设备旁完成工作。' : '设备已经恢复，不需要重复处理，也没有扣除物资。';
+      } else result = c.fn();
       G.decisions.push({ sol: G.sol, title: e.title, choice: c.t });
       G.today.notes.push(`${e.title}：${c.t}。${result}`);
       G.water = clamp(G.water, 0, 100); G.morale = clamp(G.morale, 0, 100);
@@ -733,6 +749,22 @@
 
   function openEvent(id, resolved) {
     const e = EVENTS[id](); e.id = id;
+    const physical = {
+      stormWarn: [1, 'clean', 'solar', {o2:3,dose:.2}], dustDevil: [0, 'clean', 'solar', {o2:3,dose:.2}],
+      dirty: [0, 'clean', 'solar', {o2:3,dose:.2}], quake: [0, 'repair', 'solar', {o2:4,dose:.3}],
+      o2fault: [0, 'repair', 'o2', {power:3}], delta: [0, 'sample', 'rock', {o2:5,dose:.6}]
+    }[id];
+    if (physical) {
+      const [i,kind,target,cost] = physical; e.choices[i].work = {kind,target,cost};
+      if (kind === 'repair') e.choices[i].work.needed = target === 'o2' ? g => g.o2Fault > 0 : g => g.damaged > 0;
+      if (kind === 'clean') e.choices[i].work.needed = g => g.panelEff < (id === 'dustDevil' ? 1.05 : 1) || (id !== 'stormWarn' && g.damaged > 0);
+      if (evaBlocked()) e.choices[i].disabled = evaBlocked();
+      if (!ExpeditionModel.canAfford(G,cost)) e.choices[i].disabled = '物资不足，先选其他方案';
+    }
+    if (id === 'o2fault') { G.o2Fault = 1; G.o2Mul = .6; G.o2MulDays = 3; G.o2FaultDays = 3;
+      const repair = e.choices[0].fn; e.choices[0].fn = () => { const text=repair();G.o2Mul=1;G.o2MulDays=0;G.o2Fault=0;G.o2FaultDays=0;return text; };
+      const remote = e.choices[2].fn; e.choices[2].fn = () => {const text=remote();G.o2Mul=1;G.o2MulDays=0;G.o2Fault=0;G.o2FaultDays=0;return text;};
+    }
     presentEncounter(e, resolved, true);
   }
   function sendSignalDemo() {
@@ -820,6 +852,7 @@
     return G.sci >= GOAL ? 'success' : 'home';
   }
   function endGame(kind) {
+    Expedition.finish();
     G.over = true; busy = true; hideTip(); Habitat.closeCard(); setSceneView('exterior'); $('#frame').classList.remove('notebook-open');
     $('#hud').classList.remove('on'); $('#modal').classList.remove('on');
     World.setStorm(0); World.setFrost(0); G.eva = false; G.today.shelter = false; syncWorld({ eva: false, shelter: false });
@@ -940,6 +973,12 @@
   function boot() {
     World.init($('#stage'));
     Habitat.init({ inspect: inspectCabinItem, view: setSceneView });
+    Expedition.init({ state: () => G, canAct: () => !!G && !busy && !encounterOpen && !G.over && !utilityOpen() && !$('#frame').classList.contains('nightfall'),
+      blockReason: evaBlocked, preview, refresh: () => { computePool(); renderAll(); renderTodayRecords(); renderArchive(); },
+      effect: (fn, note) => { fn(); G.today.notes.push(note); computePool(); renderAll(); renderTodayRecords(); renderArchive(); },
+      view: mode => { sceneView=mode;showJournal(false);Habitat.closeCard();Habitat.view(mode); },
+      plan: () => showJournal(true, 'plan'), endDay: endSol, inspect: inspectCabinItem
+    });
     buildHUD(); newGame();
     $('#title').classList.add('on');
     $('#bStart').onclick = () => startIntro();
@@ -958,6 +997,7 @@
     $('#bComm').textContent = `地球 · ${f1(LT.minutes)} 分钟`;
     $('#sources').onclick = e => { if (e.target.id === 'sources') $('#sources').classList.remove('on'); };
     addEventListener('keydown', e => {
+      if (Expedition.busy) return;
       if (encounterOpen) {
         if (e.key === 'Escape') { e.preventDefault(); return; }
         if (e.key === 'Tab') {
@@ -986,5 +1026,5 @@
     });
   }
   boot();
-  if (/debug/.test(location.search)) window.__dbg = { G: () => G, endGame, syncWorld, renderAll, beginSol };
+  if (/debug/.test(location.search)) window.__dbg = { G: () => G, endGame, syncWorld, renderAll, beginSol, startGame, newGame, openEvent, preview, endSol };
 })();

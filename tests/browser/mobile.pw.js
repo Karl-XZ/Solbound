@@ -1,0 +1,31 @@
+async page => {
+  await page.route('**/*', route => route.continue());await page.reload();
+  await page.getByRole('button',{name:'跳过开场',exact:true}).click();
+  await page.getByRole('button',{name:'跟着学，开始第一天 →'}).waitFor({timeout:20000});
+  await page.getByRole('button',{name:'跟着学，开始第一天 →'}).click();
+  await page.locator('#guideLocate').click();
+  await page.getByRole('button',{name:/启动一轮净水/}).click();
+  await page.locator('.item-close').click();
+  await page.screenshot({path:'output/playwright/mobile-cabin.png'});
+  await page.locator('#guideLocate').click();
+  await page.getByRole('button',{name:/倒杯水，歇一会儿/}).click();
+  await page.locator('#guideLocate').click();
+  if(await page.locator('#missionGuide').isVisible())throw Error('guide covers the power controls');
+  await page.locator('[data-k="food"] .mn').click();await page.locator('[data-k="o2"] .pl').click();
+  if(await page.evaluate(()=>__dbg.G().alloc.o2)!==4)throw Error('mobile power allocation failed');
+  await page.screenshot({path:'output/playwright/mobile-power.png'});
+  await page.locator('#closeBook').click();
+  await page.locator('#skipGuide').click();
+  await page.locator('#viewExterior').click();await page.getByRole('button',{name:'带上工具，出发 →'}).click();
+  const stick=page.locator('#touchStick'),r=await stick.boundingBox();
+  if(!r || r.width<80)throw Error('mobile stick missing');
+  const before=await page.evaluate(()=>World.getPlayer());
+  await page.mouse.move(r.x+r.width/2,r.y+r.height/2);await page.mouse.down();await page.mouse.move(r.x+r.width-10,r.y+r.height/2);
+  await page.waitForTimeout(500);await page.mouse.up();
+  const after=await page.evaluate(()=>World.getPlayer());
+  if(after.x<=before.x)throw Error('touch stick did not move astronaut');
+  const box=await page.locator('#nearbyAction').boundingBox();
+  const viewport=page.viewportSize();if(box.x<0||box.y<0||box.x+box.width>viewport.width+1||box.y+box.height>viewport.height+1)throw Error('interaction button off screen');
+  await page.screenshot({path:'output/playwright/mobile-third-person.png'});
+  return {viewport,stick:r,moved:after.x-before.x,interactionButton:box};
+}

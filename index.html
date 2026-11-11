@@ -282,6 +282,7 @@ button{font:inherit;color:inherit}
 </style>
 <link rel="stylesheet" href="css/journal.css">
 <link rel="stylesheet" href="css/habitat.css">
+<link rel="stylesheet" href="css/expedition.css">
 </head>
 <body>
 <div id="frame">
@@ -298,11 +299,11 @@ button{font:inherit;color:inherit}
     <div class="t-sub">在杰泽罗陨石坑度过 30 个火星日<br>每一度电，都有去处</div>
     <div class="t-row"><button class="btn big go" id="bStart">开始任务</button><button class="btn" id="bQuick">跳过开场</button></div>
     <div class="t-live" id="tLive"></div>
-    <div class="t-foot"><button class="link" id="bSrc0">数据来源与说明</button> · 适合 7–12 岁 · 一局约 10 分钟 · 无需下载和注册</div>
+    <div class="t-foot"><button class="link" id="bSrc0">数据来源与说明</button> · 适合 7–12 岁 · 第一天可跟着学 · 无需下载和注册</div>
   </section>
 
   <section id="hud">
-    <header class="cabin-header"><div><span class="cabin-kicker"><i></i> JEZERO · HABITAT 01</span><h1>火星前哨，今日值班。</h1><p id="cabinGreeting">离地球很远，离家很近。</p></div><div class="scene-switch" role="group" aria-label="场景视角"><button id="viewInterior" aria-pressed="true">基地生活 <small>2D</small></button><button id="viewExterior" aria-pressed="false">舱外看看 <small>3D</small></button></div></header>
+    <header class="cabin-header"><div><span class="cabin-kicker"><i></i> JEZERO · HABITAT 01</span><h1>火星前哨，今日值班。</h1><p id="cabinGreeting">离地球很远，离家很近。</p></div><div class="scene-switch" role="group" aria-label="基地与舱外"><button id="viewInterior" aria-pressed="true">基地生活</button><button id="viewExterior" aria-pressed="false">出舱探索</button></div></header>
     <div class="field-mark"><span class="status-light"></span> JEZERO OUTPOST <span>18.4° N / 77.5° E</span></div>
     <nav class="notebook-shelf" aria-label="选择笔记本">
       <button id="archiveBook" class="shelf-book archive-cover" aria-expanded="false" aria-controls="notebook">
@@ -377,8 +378,11 @@ button{font:inherit;color:inherit}
 <script src="vendor/d3-geo.min.js"></script>
 <script src="vendor/topojson-client.min.js"></script>
 <script src="vendor/land-110m.js"></script>
+<script src="js/astronaut.js"></script>
+<script src="js/expedition-model.js"></script>
 <script src="js/world.js"></script>
 <script src="js/habitat.js"></script>
+<script src="js/expedition.js"></script>
 <script src="js/game.js"></script>
 </body>
 </html>
