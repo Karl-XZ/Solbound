@@ -64,3 +64,15 @@ Validation: 14/14 Node behavior tests; authored JS syntax and 16 local asset ref
 Commits consolidated after integration verification because renderer, UI and game adapters must be delivered together as a playable change.
 Remaining validation: no physical mobile device or child playtest; 30-day simulation is one fixed event scenario, not exhaustive random-seed balancing.
 Integration: local feature branch retained for the playable preview; no remote push or production deployment.
+
+
+## 2026-11-11 tutorial and child-copy revision
+
+- User required short literal copy, close subject/verb placement, no object personification, and fewer clauses/commas. Persisted in root AGENTS.md.
+- Tutorial now follows one cause chain: inspect power -> depart -> move -> clean -> repair -> return -> purify -> drink -> allocate -> finish day.
+- Added a simple fault explanation before departure. Closing it does not advance the guide.
+- Guided actions and the only visible marker follow the current step. The return arrow now points to the door rather than the next optional survey.
+- Completing allocation closes the notebook. The player then clicks the bed. Skipping restores ordinary controls immediately.
+- Rewrote object cards, events, logs, opening captions, report text and science explanations. Renamed crew/morale labels to familiar child-facing terms.
+- Fresh review found a survey instruction naming the wrong scan button. Browser test reproduced the mismatch, then passed after the conditional instruction fix.
+- Verified 14 Node tests, actual full first-day flow into SOL02, entry/midway skip, mobile viewport/control flow, power feedback, and survey completion.

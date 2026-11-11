@@ -33,22 +33,22 @@ window.DATA = (function () {
      doseKind: 'measured' 真实测量换算；'estimate' 游戏估算 */
   const flares = [
     { date: '2024-05-20', cls: 'X12', kind: '耀斑 + 日冕物质抛射',
-      note: '这次爆发发生在太阳背面，正对着火星。好奇号 RAD 测到了着陆以来最强的辐射激增：8,100 微戈瑞，NASA 说这相当于 30 次胸部 X 光。',
+      note: '这次爆发正对火星。好奇号的 RAD 探测器测得 8,100 微戈瑞辐射。NASA 将其与约 30 次胸部 X 光检查作比较。',
       dose: 8.1, doseKind: 'measured', src: 'NASA DONKI；NASA/JPL 新闻稿（2024 年 6 月）' },
     { date: '2017-09-10', cls: 'X8.2', kind: '耀斑 + 太阳高能粒子事件',
-      note: '火星表面的辐射水平升到平时的两倍以上；MAVEN 探测器看到火星上空出现了覆盖全球的极光。',
+      note: '火星表面辐射超过平时的两倍。MAVEN 探测器记录到全球范围的极光。',
       dose: 4.0, doseKind: 'estimate', src: 'NASA DONKI；NASA MAVEN / Curiosity RAD 新闻稿（2017 年 9 月）' },
     { date: '2017-09-06', cls: 'X9.3', kind: '耀斑',
-      note: '第 24 太阳活动周里最强的一次耀斑。四天后，同一片太阳黑子群又爆发了一次 X8.2 级耀斑。',
+      note: '这是第 24 太阳活动周最强的一次耀斑。四天后同一太阳黑子群又发生了 X8.2 级耀斑。',
       dose: 3.0, doseKind: 'estimate', src: 'NASA DONKI' },
     { date: '2024-10-03', cls: 'X9.0', kind: '耀斑',
       note: '第 25 太阳活动周里最强的耀斑之一。太阳正处在约 11 年一次的活动高峰附近。',
       dose: 3.0, doseKind: 'estimate', src: 'NASA DONKI' },
     { date: '2021-10-28', cls: 'X1.0', kind: '耀斑 + 地面级增强事件（GLE73）',
-      note: '级别不算最高，但喷出的高能粒子非常猛烈，连地球地面上的中子探测器都测到了。',
+      note: '这次爆发产生了高能粒子。地球地面上的中子探测器也记录到了变化。',
       dose: 2.5, doseKind: 'estimate', src: 'NASA DONKI' },
     { date: '2012-07-23', cls: '超快 CME', kind: '日冕物质抛射',
-      note: '速度约 3,000 公里/秒，被 STEREO-A 探测器正面测到。科学家估算：如果它早一周爆发，就会正面撞上地球。',
+      note: 'STEREO-A 测得喷发速度约为每秒 3,000 公里。科学家估算这次喷发若提前一周就可能影响地球。',
       dose: 6.0, doseKind: 'estimate', src: 'NASA DONKI；Baker 等（2013），Space Weather' }
   ];
 
@@ -83,7 +83,7 @@ window.DATA = (function () {
     const f = live.flares[0]; const r = clsRank(f.cls);
     if (r < 305) return null;
     return { date: f.peak.slice(0, 10), cls: f.cls, kind: '耀斑（实时数据）', live: true,
-      note: `这是 NASA DONKI 数据库里最近 30 天最强的一次耀斑，发生在 ${f.peak.slice(0, 10)}${f.region ? '，来自太阳黑子群 ' + f.region : ''}。游戏假设它正对着火星。`,
+      note: `这是 NASA DONKI 最近 30 天记录的最强耀斑。发生日期为 ${f.peak.slice(0, 10)}${f.region ? '。来自太阳黑子群 ' + f.region : ''}。游戏假设它正对着火星。`,
       dose: r >= 400 ? Math.min(6, 2 + (r - 400) / 3) : 1.5, doseKind: 'estimate', src: 'NASA DONKI 实时接口（api.nasa.gov）' };
   }
 
@@ -120,31 +120,31 @@ window.DATA = (function () {
       body: '火星表面每个火星日约 0.67 毫希（mSv）；飞往火星途中每天约 1.84 毫希。2024 年 5 月 20 日的太阳风暴中测到 8,100 微戈瑞。',
       link: 'https://science.nasa.gov/mission/msl-curiosity/science-instruments/' },
     { tag: '真实测量', title: '毅力号 MOXIE 制氧实验',
-      body: '2021–2023 年间运行 16 次，共制造 122 克氧气，最高每小时 12 克、纯度 98%。一个人一天大约需要 0.84 千克氧气。',
+      body: '2021–2023 年间共运行 16 次。累计制造 122 克氧气。最高产量为每小时 12 克。纯度为 98%。一个人一天大约需要 0.84 千克氧气。',
       link: 'https://science.nasa.gov/mission/mars-2020-perseverance/' },
     { tag: '真实记录', title: '机遇号与 2018 年全球沙尘暴',
-      body: '沙尘把阳光几乎完全挡住（光学厚度 τ 超过 10），靠太阳能的机遇号在 2018 年 6 月 10 日失去联系。它原计划工作 90 个火星日，最后工作了 5,111 个。',
+      body: '沙尘几乎挡住了全部阳光。光学厚度 τ 超过 10。机遇号于 2018 年 6 月 10 日失去联系。计划工作时长为 90 个火星日。实际工作了 5,111 个。',
       link: 'https://science.nasa.gov/mission/mer-opportunity/' },
     { tag: '真实记录', title: '尘卷风“清洁事件”',
-      body: '勇气号和机遇号都多次被路过的尘卷风吹干净太阳能板，发电量明显回升。InSight 着陆器则在 2022 年因为板子积尘太厚而结束任务。',
+      body: '尘卷风曾多次吹走勇气号和机遇号板面上的灰尘。发电量因此回升。InSight 着陆器则在 2022 年因为板子积尘太厚而结束任务。',
       link: 'https://mars.nasa.gov/mer/' },
     { tag: '真实研究', title: 'NASA 开放科学数据库 OSDR / GeneLab · 双胞胎研究',
-      body: '宇航员 Scott Kelly 在空间站住了近一年，与地球上的双胞胎兄弟对比（Garrett-Bakelman 等，2019，《Science》）。回到地球半年后，仍有约 7% 的基因表达变化没有恢复。失重环境下骨密度每月流失 1%–1.5%。',
+      body: 'Scott Kelly 曾在空间站生活近一年。研究人员将他与地球上的双胞胎兄弟作对比。返航半年后仍有约 7% 的基因表达变化未恢复。研究发表于 2019 年《Science》。失重环境下骨密度每月流失 1%–1.5%。',
       link: 'https://osdr.nasa.gov/' },
     { tag: '真实记录', title: 'Veggie 太空菜园 · 空间站生命保障',
-      body: '2015 年 8 月，宇航员第一次吃到在空间站种出来的红叶生菜。2023 年，空间站的水回收率达到 98%。',
+      body: '宇航员在 2015 年 8 月首次吃到空间站种植的红叶生菜。空间站的水回收率于 2023 年达到 98%。',
       link: 'https://www.nasa.gov/mission/station/' },
     { tag: '真实发现', title: '杰泽罗陨石坑与“夏耶瓦瀑布”岩石',
-      body: '杰泽罗曾经是一片古老湖泊，毅力号在三角洲边缘发现了带有“豹纹斑点”的岩石。2025 年 9 月，NASA 宣布其样本含有潜在生物特征，仍需进一步确认。',
+      body: '杰泽罗曾是一片湖泊。毅力号在三角洲边缘发现了带斑点的岩石。NASA 于 2025 年 9 月公布相关研究。岩样可能含有古代生命活动的线索。科学家仍需确认。',
       link: 'https://science.nasa.gov/mission/mars-2020-perseverance/' },
     { tag: '实时计算', title: 'JPL 行星轨道根数',
-      body: '“今天地球离火星多远、信号要走几分钟”是按今天的真实日期，用 JPL 公布的行星轨道根数算出来的。',
+      body: '地火距离和信号时长按当天日期计算。计算使用 JPL 公布的行星轨道根数。',
       link: 'https://ssd.jpl.nasa.gov/planets/approx_pos.html' },
     { tag: '真实测量', title: 'InSight 火星地震记录',
       body: 'InSight 着陆器在火星上记录到 1,300 多次火星地震，最大的一次发生在 2022 年 5 月 4 日，震级约 4.7。',
       link: 'https://science.nasa.gov/mission/insight/' },
     { tag: '真实研究', title: '就地资源利用与 3D 打印栖息地',
-      body: 'NASA 研究用月球和火星的土壤直接打印建筑，并举办过“3D 打印栖息地挑战赛”。游戏里的“建设机会”就来自这个思路。',
+      body: 'NASA 正在研究用当地土壤打印建筑。NASA 也举办过相关设计挑战赛。游戏据此设置了建设任务。',
       link: 'https://www.nasa.gov/directorates/stmd/prizes-challenges-crowdsourcing-program/centennial-challenges/3d-printed-habitat-challenge/' },
     { tag: '真实数据', title: 'Natural Earth 1:110m 海岸线',
       body: '开场里地球的大陆轮廓来自公开的 Natural Earth 地图数据。',
@@ -155,13 +155,13 @@ window.DATA = (function () {
   ];
 
   const simplifications = [
-    '生活舱中的饮水点数、药品数量、士气和照护效果是为资源取舍设计的游戏规则，不代表真实的饮水量、药物剂量或医疗建议。',
-    '游戏把 30 个火星日的任务剂量上限设为 25 毫希，比 NASA 的职业上限 600 毫希严格得多，这样每一次辐射决定都会被你感受到。',
-    '电力用“格”来计算：晴天约 12 格。火星阳光只有地球的 43%，所以太阳能板必须很大，而且怕灰尘。',
-    '真实的辐射屏蔽主要靠“质量”（火星土、水墙），不是靠电。所以游戏里的“屏蔽施工”用电来驱动挖土机，把舱段一点点埋起来。',
-    '银河宇宙射线能量极高，很难完全挡住；太阳风暴的粒子能量较低，容易挡住。所以屏蔽等级对太阳风暴的效果远好于对日常辐射。',
-    '温室里的作物要 3 天才能“收获”，这是为了让你体会“今天的决定，明天才见效”。真实作物的生长周期要长得多。',
-    '标记为“游戏估算”的太阳风暴剂量是根据事件强度估计的；只有 2024 年 5 月 20 日那一次是好奇号的真实测量值。'
+    '饮水、药品和心情数值是游戏规则。不代表真实饮水量或药物剂量。',
+    '游戏中的 30 天辐射上限为 25 毫希。这是训练规则。不是现实任务的安全标准。',
+    '游戏用“格”表示电力。晴天约发电 12 格。火星阳光强度约为地球的 43%。太阳能板积灰会降低发电量。',
+    '火星土和水等材料可以减少辐射。游戏中的屏蔽施工会用电驱动挖土机。',
+    '银河宇宙射线较难阻挡。太阳风暴粒子相对容易阻挡。因此两类辐射的屏蔽效果不同。',
+    '游戏中的温室需要 3 天才能收获。真实作物需要更长时间。',
+    '标有“游戏估算”的太阳风暴剂量是估算值。2024 年 5 月 20 日事件使用好奇号的测量数据。'
   ];
 
   return { facts, flares, sources, simplifications, fetchDonki, liveFlareEvent, earthMars, get live() { return live; } };

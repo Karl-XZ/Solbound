@@ -39,13 +39,14 @@ const modelPath = '../js/expedition-model.js', controllerPath = '../js/astronaut
     m.start('sample');m.finish('sample');m.finish('sample');assert.deepEqual(g,{o2:55,sci:18});
   });
   test('tutorial advances through actual actions and skipping never advances tasks',()=>{
-    const m=create();m.guide.active=true;assert.equal(m.step,'filter');
-    for(const action of ['filter','drink','console','depart','move','clean','repair','return','allocate','sleep'])m.notify(action);
+    const m=create();m.guide.active=true;assert.equal(m.step,'console');
+    for(const action of ['console','depart','move','clean','repair','return','filter','drink','allocate','sleep'])m.notify(action);
     assert.equal(m.guide.active,false);assert.equal(m.guide.index,10);
   });
   test('doing a later tutorial action early never strands a once-a-day action',()=>{
-    const m=create();m.guide.active=true;m.notify('drink');assert.equal(m.step,'filter');
-    m.notify('filter');assert.equal(m.step,'console');
+    const m=create();m.guide.active=true;m.notify('drink');assert.equal(m.step,'console');
+    for(const action of ['console','depart','move','clean','repair','return','filter'])m.notify(action);
+    assert.equal(m.step,'allocate');
   });
   test('conjunction leak is applied to each actual departure, with its advertised probability boundary',()=>{
     const g={conjRisk:4,today:{flareOut:.5}};

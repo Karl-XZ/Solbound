@@ -1,6 +1,6 @@
 /* Task completion is one-shot; closing an activity never completes it. */
 (function (root) {
-  const steps = ['filter', 'drink', 'console', 'depart', 'move', 'clean', 'repair', 'return', 'allocate', 'sleep'];
+  const steps = ['console', 'depart', 'move', 'clean', 'repair', 'return', 'filter', 'drink', 'allocate', 'sleep'];
   function canAfford(g, cost = {}) {
     return g.o2 > (cost.o2 || 0) && g.dose + (cost.dose || 0) < 25 &&
       g.batt >= (cost.batt || 0) && (!cost.power || g.pool >= cost.power);

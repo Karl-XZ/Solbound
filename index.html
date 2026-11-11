@@ -296,14 +296,14 @@ button{font:inherit;color:inherit}
   <section id="title" class="screen">
     <div class="t-kicker">少年宇航员 · 任务训练</div>
     <h1>火星前哨</h1>
-    <div class="t-sub">在杰泽罗陨石坑度过 30 个火星日<br>每一度电，都有去处</div>
+    <div class="t-sub">在杰泽罗陨石坑度过 30 个火星日<br>分配电力。保障生活。探索火星。</div>
     <div class="t-row"><button class="btn big go" id="bStart">开始任务</button><button class="btn" id="bQuick">跳过开场</button></div>
     <div class="t-live" id="tLive"></div>
     <div class="t-foot"><button class="link" id="bSrc0">数据来源与说明</button> · 适合 7–12 岁 · 第一天可跟着学 · 无需下载和注册</div>
   </section>
 
   <section id="hud">
-    <header class="cabin-header"><div><span class="cabin-kicker"><i></i> JEZERO · HABITAT 01</span><h1>火星前哨，今日值班。</h1><p id="cabinGreeting">离地球很远，离家很近。</p></div><div class="scene-switch" role="group" aria-label="基地与舱外"><button id="viewInterior" aria-pressed="true">基地生活</button><button id="viewExterior" aria-pressed="false">出舱探索</button></div></header>
+    <header class="cabin-header"><div><span class="cabin-kicker"><i></i> JEZERO · HABITAT 01</span><h1>火星基地</h1><p id="cabinGreeting">请检查物资和电力。</p></div><div class="scene-switch" role="group" aria-label="基地与舱外"><button id="viewInterior" aria-pressed="true">基地生活</button><button id="viewExterior" aria-pressed="false">出舱探索</button></div></header>
     <div class="field-mark"><span class="status-light"></span> JEZERO OUTPOST <span>18.4° N / 77.5° E</span></div>
     <nav class="notebook-shelf" aria-label="选择笔记本">
       <button id="archiveBook" class="shelf-book archive-cover" aria-expanded="false" aria-controls="notebook">
@@ -321,14 +321,14 @@ button{font:inherit;color:inherit}
       <button data-item="food" aria-label="查看食物"><span class="resource-icon">🍞</span><span>食物<b id="cabinFood">50</b></span></button>
       <button data-item="water" aria-label="查看饮用水"><span class="resource-icon">💧</span><span>饮水<b id="cabinWater">70</b></span></button>
       <button data-item="medicine" aria-label="查看药品"><span class="resource-icon">💊</span><span>药品<b id="cabinMeds">4</b></span></button>
-      <button data-item="crew" aria-label="查看乘组士气"><span class="resource-icon" id="moraleIcon">😊</span><span>士气<b id="cabinMorale">75</b></span></button>
+      <button data-item="crew" aria-label="查看宇航员心情"><span class="resource-icon" id="moraleIcon">😊</span><span>心情<b id="cabinMorale">75</b></span></button>
       <button data-item="calendar" aria-label="查看任务日历"><span class="resource-icon">📅</span><span>火星日<b id="cabinDay">01<small> / 30</small></b></span></button>
     </div>
-    <span class="room-hint" id="roomHint">点点舱里的物品，照顾今天的生活。</span>
+    <span class="room-hint" id="roomHint">点击物品进行操作。</span>
     <div id="notebook" class="notebook" data-book="today" role="region" aria-label="今日手册">
       <header class="book-shell">
         <span class="book-brand"><span class="brand-mark">✦</span> ARES <span id="bookName">今日手册</span></span>
-        <button id="closeBook" class="shell-button" aria-label="收起笔记本，查看基地">收起 <span>↗</span></button>
+        <button id="closeBook" class="shell-button" aria-label="关闭手册">收起 <span>↗</span></button>
       </header>
       <div class="book-leaves">
         <div class="book-binding" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
@@ -340,21 +340,21 @@ button{font:inherit;color:inherit}
           </section>
           <section class="book-page" data-book="today" data-sheet="decision" data-label="今日决定" aria-label="今日决定" hidden><div id="journalChoices"></div></section>
           <section class="book-page" data-book="today" data-sheet="supplies" data-label="物资清单" aria-label="物资清单" hidden>
-            <div class="page-eyebrow">LIFE SUPPORT / 乘组 04 人</div><h2>物资，要够用。</h2><p class="page-subtitle">氧气、食物与电池，是明天的底气。</p>
+            <div class="page-eyebrow">LIFE SUPPORT / 宇航员 04 人</div><h2>物资数量</h2><p class="page-subtitle">请检查氧气、食物和电池。</p>
             <div id="meters"></div><p class="page-note">预计变化会随电力分配更新。<br>氧气和食物不能耗尽。</p>
           </section>
-          <section class="book-page" data-book="today" data-sheet="care" data-label="乘组照护" aria-label="乘组照护" hidden>
-            <div class="page-eyebrow">CREW CARE</div><h2>好好照顾，彼此。</h2><p class="page-subtitle">一杯水、一份药品，和一点好心情。</p><div id="careMeters"></div><p class="page-note">每天饮水 −2.5，士气自然 −2。<br>可以在生活舱里加餐、喝水、聊天，或启动净水机。</p>
+          <section class="book-page" data-book="today" data-sheet="care" data-label="宇航员照护" aria-label="宇航员照护" hidden>
+            <div class="page-eyebrow">CREW CARE</div><h2>宇航员状态</h2><p class="page-subtitle">饮水、加餐和休息会影响宇航员状态。</p><div id="careMeters"></div><p class="page-note">每天饮水 −2.5。心情自然 −2。<br>点击舱内物品可加餐、喝水和聊天。净水机可以补充饮水。</p>
           </section>
           <section class="book-page" data-book="today" data-sheet="mission" data-label="任务状态" aria-label="任务状态" hidden>
-            <div class="page-eyebrow">MISSION STATUS</div><h2>平安，也要有所发现。</h2><p class="page-subtitle">科研是远行的目的，安全是回家的前提。</p><div id="missionMeters"></div><div class="mission-target"><span>这次任务的目标</span><b>科学 ≥ 100 · 辐射 &lt; 25 毫希</b><small>屏蔽越早建好，之后每天承受的辐射越少。</small></div>
+            <div class="page-eyebrow">MISSION STATUS</div><h2>任务目标</h2><p class="page-subtitle">生存 30 天。科学成果达到 100 分。</p><div id="missionMeters"></div><div class="mission-target"><span>这次任务的目标</span><b>科学 ≥ 100 · 辐射 &lt; 25 毫希</b><small>请提前升级屏蔽。屏蔽可以减少每天的辐射。</small></div>
           </section>
           <section class="book-page allocation-page" data-book="today" data-sheet="plan" data-label="电力安排" aria-label="电力安排" hidden>
-            <div class="page-eyebrow">DAILY ALLOCATION</div><h2>让明天，继续。</h2><button id="planningNotice" hidden></button>
+            <div class="page-eyebrow">DAILY ALLOCATION</div><h2>分配今日电力</h2><button id="planningNotice" hidden></button>
             <div class="allocation-scroll"><div id="power"></div></div><div id="planActions"></div>
           </section>
           <section class="book-page" data-book="today" data-sheet="weather" data-label="环境观测" aria-label="环境观测" hidden>
-            <div class="page-eyebrow">SURFACE TELEMETRY</div><h2>窗外的火星。</h2><p class="page-subtitle">留意阳光，也留意太阳带来的风险。</p><div id="fore"></div><div id="journalMap"></div>
+            <div class="page-eyebrow">SURFACE TELEMETRY</div><h2>天气和环境</h2><p class="page-subtitle">请检查天气和辐射风险。</p><div id="fore"></div><div id="journalMap"></div>
           </section>
           <div id="journalHistory"></div>
         </div>

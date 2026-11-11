@@ -10,6 +10,7 @@
 #fieldHud.guided .mission-card{display:none}#fieldHud.guide-on-left #missionGuide{left:28px;right:auto}
 #frame.notebook-open #missionGuide{display:none}#bookSkipGuide{font-size:10px;color:#e1e8cf;padding:5px;white-space:nowrap}#bookSkipGuide[hidden]{display:none}#powerGuideHint{margin:5px 0;color:#416d52;font-size:12px}
 .tutorial-target .object-art{filter:drop-shadow(0 0 9px #ffdc62) drop-shadow(0 0 3px #293f41)}.tutorial-target .object-caption rect{fill:#fff2a6;stroke:#8f6a35;stroke-width:3}
+#frame.interior-view.tutorial-focused .habitat-object:not(.tutorial-target){opacity:.55}
 #fieldStats{position:absolute;left:50%;top:26px;transform:translateX(-50%);display:flex;gap:22px;padding:12px 22px;border:1px solid #f9e5bb80;background:#243f40e8;color:#fff5d7;border-radius:12px;font-size:12px;white-space:nowrap}#fieldStats b{font-size:16px;margin-left:5px}
 #homeDirection{position:absolute;bottom:144px;left:50%;transform:translateX(-50%);color:#fff5dc;background:#263c42cf;padding:9px 17px;border-radius:30px;font-size:13px}#homeDirection>span{font-size:22px;line-height:1;margin-right:8px;color:#ffde7a}
 #objectiveDirection{position:absolute;top:97px;left:50%;transform:translateX(-50%);padding:9px 17px;border-radius:30px;background:#fff0b8ed;color:#304b43;font-size:13px;font-weight:700;white-space:nowrap}#objectiveDirection>span{font-size:20px;margin-right:8px}
