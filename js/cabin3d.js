@@ -11,7 +11,7 @@
 window.Cabin3D = (() => {
   const P = { cream: 0xf4e7c8, mustard: 0xe6a83f, orange: 0xd9692f, rust: 0xb8452a, brick: 0x8e2f22, maroon: 0x5a1d1d,
     night: 0x2b1a24, navy: 0x1f2c3f, teal: 0x3f8f93, tealL: 0x8cc7c3, tealD: 0x2a5f68, green: 0x7fae5b };
-  const FONT = '"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif', DISP = '"ZCOOL QingKe HuangYou","Noto Sans SC","Microsoft YaHei",sans-serif';
+  const FONT = '"Nunito",system-ui,"Segoe UI",sans-serif', DISP = '"Fredoka","Nunito",system-ui,sans-serif';
   const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
   let renderer, rt, postM, postS, postC, scene, camera, container, tags = {}, active = false, raf = 0, W = 1, H = 1, PR = 1;
   let grad, M, hovered = null, wx = 'day', mood = 'happy', samplesShown = false;
@@ -120,7 +120,7 @@ window.Cabin3D = (() => {
     mesh(new THREE.TorusGeometry(2.0, .09, 8, 64), M.cream, win).position.z = .12;
     for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; mesh(new THREE.SphereGeometry(.09, 8, 6), M.cream, win).position.set(Math.cos(a) * 2.25, Math.sin(a) * 2.25, .3); }
     mesh(new THREE.BoxGeometry(1.8, .36, .1), M.ink, win).position.set(0, 2.85, 0);
-    const ptxt = new THREE.Mesh(new THREE.PlaneGeometry(1.7, .3), basic(0xffffff, { map: canvasTex(340, 60, (x, w, h) => { x.fillStyle = '#2b1a24'; x.fillRect(0, 0, w, h); x.fillStyle = '#e6a83f'; x.font = `800 30px ${FONT}`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('OBS · 观察窗', w / 2, h / 2 + 2); }) }));
+    const ptxt = new THREE.Mesh(new THREE.PlaneGeometry(1.7, .3), basic(0xffffff, { map: canvasTex(340, 60, (x, w, h) => { x.fillStyle = '#2b1a24'; x.fillRect(0, 0, w, h); x.fillStyle = '#e6a83f'; x.font = `800 30px ${FONT}`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('OBS · Window', w / 2, h / 2 + 2); }) }));
     ptxt.position.set(0, 2.85, .06); win.add(ptxt);
     onWall(win, .6, 3.9, .32); win.traverse(o => o.castShadow = false);
     lights.spot = new THREE.SpotLight(0xffc66e, 1.25, 30, .42, .35, 1.2); lights.spot.position.set(.6, 4.2, -6); lights.spot.target.position.set(1.4, 0, 3); scene.add(lights.spot, lights.spot.target);
@@ -161,10 +161,10 @@ window.Cabin3D = (() => {
       mesh(new THREE.BoxGeometry(1.7, .38, .16), M.orange, c).position.y = .7;
       dyn.calendar = canvasTex(300, 310, (x, w, h, sol = 1) => {
         x.fillStyle = '#f4e7c8'; x.fillRect(0, 0, w, h); x.fillStyle = '#d9692f'; x.fillRect(0, 0, w, 62);
-        x.fillStyle = '#f4e7c8'; x.font = `900 30px ${FONT}`; x.textAlign = 'center'; x.textBaseline = 'alphabetic'; x.fillText('火星日 SOL', w / 2, 44);
+        x.fillStyle = '#f4e7c8'; x.font = `900 30px ${FONT}`; x.textAlign = 'center'; x.textBaseline = 'alphabetic'; x.fillText('SOL', w / 2, 44);
         x.fillStyle = '#1f2c3f'; x.fillRect(22, 80, 120, 160); x.fillRect(158, 80, 120, 160);
         const n = String(sol).padStart(2, '0'); x.fillStyle = '#e6a83f'; x.font = `140px ${DISP}`; x.textBaseline = 'middle'; x.fillText(n[0], 82, 168); x.fillText(n[1], 218, 168);
-        x.fillStyle = '#2b1a24'; x.fillRect(22, 158, 256, 5); x.font = `800 24px ${FONT}`; x.textBaseline = 'alphabetic'; x.fillText('共 30 个火星日', w / 2, 285);
+        x.fillStyle = '#2b1a24'; x.fillRect(22, 158, 256, 5); x.font = `800 24px ${FONT}`; x.textBaseline = 'alphabetic'; x.fillText('Mission: 30 sols', w / 2, 285);
       });
       const face = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.55), basic(0xffffff, { map: dyn.calendar })); face.position.z = .08; c.add(face);
       onWall(c, -8.6, 4.2, .2); own('calendar', c); anchors.calendar = V3(-8.6, 3.05, wallZ(3.05) + .4); }
@@ -196,10 +196,10 @@ window.Cabin3D = (() => {
         x.fillStyle = '#e6a83f'; x.fillRect(0, 0, w, h); x.fillStyle = '#b8452a'; x.beginPath(); x.arc(w / 2, 140, 82, 0, 7); x.fill(); x.lineWidth = 6; x.strokeStyle = '#2b1a24'; x.stroke();
         x.fillStyle = '#f4e7c8'; x.beginPath(); x.moveTo(140, 50); x.quadraticCurveTo(165, 80, 162, 130); x.lineTo(162, 200); x.lineTo(118, 200); x.lineTo(118, 130); x.quadraticCurveTo(115, 80, 140, 50); x.fill(); x.stroke();
         x.fillStyle = '#3f8f93'; x.beginPath(); x.moveTo(118, 165); x.lineTo(96, 205); x.lineTo(118, 205); x.fill(); x.stroke(); x.beginPath(); x.moveTo(162, 165); x.lineTo(184, 205); x.lineTo(162, 205); x.fill(); x.stroke();
-        x.fillStyle = '#2b1a24'; x.fillRect(0, 262, w, 88); x.fillStyle = '#f4e7c8'; x.font = `900 40px ${FONT}`; x.textAlign = 'center'; x.fillText('注意安全', w / 2, 312); x.fillStyle = '#e6a83f'; x.font = `800 18px ${FONT}`; x.fillText('ARES · JEZERO', w / 2, 338);
+        x.fillStyle = '#2b1a24'; x.fillRect(0, 262, w, 88); x.fillStyle = '#f4e7c8'; x.font = `900 40px ${FONT}`; x.textAlign = 'center'; x.fillText('Stay Safe', w / 2, 312); x.fillStyle = '#e6a83f'; x.font = `800 18px ${FONT}`; x.fillText('ARES · JEZERO', w / 2, 338);
         x.strokeStyle = '#2b1a24'; x.lineWidth = 10; x.strokeRect(0, 0, w, h); }) }));
       p.rotation.z = -.05; onWall(p, 7.0, 4.4, .25);
-      const e = new THREE.Mesh(new THREE.PlaneGeometry(.75, .85), basic(0xffffff, { map: canvasTex(150, 170, (x, w, h) => { x.fillStyle = '#fff8e6'; x.fillRect(0, 0, w, h); x.fillStyle = '#3f8f93'; x.beginPath(); x.arc(75, 70, 48, 0, 7); x.fill(); x.lineWidth = 5; x.strokeStyle = '#2b1a24'; x.stroke(); x.fillStyle = '#7fae5b'; x.beginPath(); x.ellipse(60, 58, 22, 14, .5, 0, 7); x.fill(); x.beginPath(); x.ellipse(92, 90, 14, 10, -.3, 0, 7); x.fill(); x.fillStyle = '#2b1a24'; x.font = `800 22px ${FONT}`; x.textAlign = 'center'; x.fillText('地球', 75, 156); x.lineWidth = 8; x.strokeRect(0, 0, w, h); }) }));
+      const e = new THREE.Mesh(new THREE.PlaneGeometry(.75, .85), basic(0xffffff, { map: canvasTex(150, 170, (x, w, h) => { x.fillStyle = '#fff8e6'; x.fillRect(0, 0, w, h); x.fillStyle = '#3f8f93'; x.beginPath(); x.arc(75, 70, 48, 0, 7); x.fill(); x.lineWidth = 5; x.strokeStyle = '#2b1a24'; x.stroke(); x.fillStyle = '#7fae5b'; x.beginPath(); x.ellipse(60, 58, 22, 14, .5, 0, 7); x.fill(); x.beginPath(); x.ellipse(92, 90, 14, 10, -.3, 0, 7); x.fill(); x.fillStyle = '#2b1a24'; x.font = `800 22px ${FONT}`; x.textAlign = 'center'; x.fillText('Earth', 75, 156); x.lineWidth = 8; x.strokeRect(0, 0, w, h); }) }));
       e.rotation.z = .12; onWall(e, 8.3, 4.7, .25); }
 
     /* purifier */
@@ -256,7 +256,7 @@ window.Cabin3D = (() => {
       [P.mustard, P.orange, P.tealL, P.green, P.mustard].forEach((col, i) => { const k = mesh(new THREE.BoxGeometry(.2, .06, .14), basic(col), c); k.position.set(-.7 + i * .25, 1.3, .32); k.rotation.x = .15; });
       mesh(new THREE.BoxGeometry(1.9, 1.15, .85), M.cream, c).position.set(-.2, 1.95, -.25);
       mesh(new THREE.BoxGeometry(1.7, .95, .1), M.ink, c).position.set(-.2, 1.97, .2);
-      dyn.screen = canvasTex(620, 320, (x, w, h, gen = 0) => { x.fillStyle = '#1f2c3f'; x.fillRect(0, 0, w, h); x.fillStyle = 'rgba(140,199,195,.12)'; for (let i = 0; i < h; i += 8) x.fillRect(0, i, w, 3); x.fillStyle = '#8cc7c3'; x.font = `800 30px ${FONT}`; x.textAlign = 'left'; x.textBaseline = 'alphabetic'; x.fillText('POWER · 今日', 30, 58); x.fillStyle = '#e6a83f'; x.font = `130px ${DISP}`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(`发电 ${gen} 格`, w / 2, h / 2 + 30); });
+      dyn.screen = canvasTex(620, 320, (x, w, h, gen = 0) => { x.fillStyle = '#1f2c3f'; x.fillRect(0, 0, w, h); x.fillStyle = 'rgba(140,199,195,.12)'; for (let i = 0; i < h; i += 8) x.fillRect(0, i, w, 3); x.fillStyle = '#8cc7c3'; x.font = `800 30px ${FONT}`; x.textAlign = 'left'; x.textBaseline = 'alphabetic'; x.fillText('POWER · Today', 30, 58); x.fillStyle = '#e6a83f'; let fs = 130; do { x.font = `${fs}px ${DISP}`; fs -= 6; } while (x.measureText(`Power ${gen}`).width > w - 50 && fs > 40); x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(`Power ${gen}`, w / 2, h / 2 + 18); x.fillStyle = '#8cc7c3'; x.font = `800 30px ${FONT}`; x.fillText('blocks', w / 2, h - 34); });
       const scr = new THREE.Mesh(new THREE.PlaneGeometry(1.55, .8), basic(0xffffff, { map: dyn.screen })); scr.position.set(-.2, 1.97, .26); c.add(scr);
       mesh(new THREE.CylinderGeometry(.05, .05, .4, 6), M.ink, c).position.set(1.0, 1.35, .2);
       mesh(new THREE.SphereGeometry(.11, 10, 8), basic(P.rust), c).position.set(1.0, 1.58, .2);

@@ -77,10 +77,10 @@
   #baseConsole .p-tokens{gap:3px;min-height:10px;margin:5px 0}
   #baseConsole .tk{width:13px;height:10px;border-width:1px}
   #baseConsole .p-slots{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
-  #baseConsole .slot{display:grid;grid-template-columns:1fr 94px;grid-template-rows:auto auto;padding:5px 6px;gap:1px 3px}
-  #baseConsole .s-top{font-size:11px;letter-spacing:0}
+  #baseConsole .slot{display:grid;grid-template-columns:minmax(0,1fr) 90px;grid-template-rows:auto auto;padding:5px 6px;gap:1px 3px}
+  #baseConsole .s-top{min-width:0;grid-column:1/-1;font-size:11px;letter-spacing:0}
   #baseConsole .s-top .q{display:none}
-  #baseConsole .s-ctl{grid-column:2;grid-row:1/3;gap:3px;align-self:center;margin:0}
+  #baseConsole .s-ctl{grid-column:2;grid-row:2;gap:3px;align-self:center;margin:0}
   #baseConsole .s-ctl button{width:30px;height:40px;box-shadow:1px 1px 0 var(--ink);font-size:21px}
   #baseConsole .s-n{font-size:23px}
   #baseConsole .s-eff{font-size:10px;min-height:29px;grid-column:1;line-height:1.35}
@@ -92,7 +92,7 @@
   #baseConsole #evaDepart .sw::after{width:10px;height:10px}
   #baseConsole .p-left{font-size:9px;order:3;flex-basis:100%;text-align:right}
   #baseConsole #bGo{font-size:13px;padding:8px 12px;margin-left:auto}
-  #frame.console-open.overview-view #missionGuide:not([hidden]){top:91px;left:188px;right:10px;width:auto;padding:9px}
+  #frame.console-open.overview-view #missionGuide:not([hidden]){top:220px;left:12px;right:12px;width:auto;padding:9px}
   #frame.console-open #missionGuide h3{font-size:13px}
   #frame.console-open #missionGuide p{font-size:10px;line-height:1.5}
   #frame.console-open #missionGuide .field-button{font-size:10px;padding:6px;min-height:36px}

@@ -1,27 +1,28 @@
-# 儿童文案规则
+# Writing rules for young players
 
-本游戏面向 7–12 岁儿童。以下规则来自用户的明确要求。
+Solbound is made for kids ages 7–12. Follow these rules whenever you change any text a player can see.
 
-- 玩家操作文案使用直白中文。科学专名、单位和来源可以保留原文。
-- 主语紧跟动词。不要在主语和动词之间加入长修饰语。
-- 一句只说明一个动作、一个原因或一个结果。
-- 使用短句。避免多个分句和连续逗号。
-- 不把设备、物资、场景写成人。禁止“太阳能板在等你”“设备的小脾气”等表达。
-- 按钮写出具体操作和对象。不要使用“找到它”“看看秘密”等含糊文字。
-- 提示中的按钮名必须与实际按钮一致。
-- 先显示问题。再说明操作。操作完成后显示实际结果。
-- 教程只在玩家完成当前动作后前进。不要通过关闭说明跳过实际操作。
-- 教程保持因果顺序：检查发电 → 出舱修复 → 回舱净水和饮水 → 分电 → 结束当天。
-- 保留科学数据、条件和资源代价。简化文字时不能改变规则。
-- 修改文案时检查教程、提示卡、按钮、物品说明、事件、日志、开场和结局。
-- 修改教程或文案时保留原有资源仪表、能源分配和 3D 基地全景。不要隐藏这些界面的入口。舱外保留第三人称操控。
-- 点击生活舱控制台后直接进入原有 3D 基地界面。资源仪表在左侧。环境信息在右侧。能源分配卡在底部中央。日记只显示记录，不承载资源仪表或分电控件。
-- 所有界面禁用 emoji 装饰。沿用初版的米色、深色线框和黄色操作按钮。图标使用同一套 SVG 或简单几何标记。
-- 2D 生活舱保持原有全屏尺寸和固定位置。教程允许悬浮在场景上。禁止因教程出现、步骤切换或关闭而缩放或移动场景。常驻状态栏不要遮挡物品标签。
-- 舱外任务应写明地点、操作和结果。例如“扫描火箭旁的地面”，并说明扫描、保存结果和科学 +6。不要只写“观察今日地貌”。
-- 玩家看到的名称统一为“控制台”。教程、按钮、物品标签和提示必须一致。
-- 舱内、3D 全景和第三人称出舱共用同一个“前哨站状态”组件和同一份游戏数据。氧气、食物、辐射、科学、电池与屏蔽信息都应可见。
-- 分电教程必须显示最低电量、当前分配和完成按钮。教程中的“完成分电”与底部按钮共用同一套操作逻辑。
-- 教程只能描述当前可见的证据。出舱前只说明发电偏低。走近并看向设备后，才指出灰尘或松脱接头。清扫、维修必须改变同一个场景部件的外观，并同步发电量。
-- “出舱探索”必须是真正的醒目操作按钮，不得画成开关或复选框。提示要明确指出当前卡片中的按钮。
-- 本版本的生活舱是 3D 场景（js/cabin3d.js）。上面所有"2D 生活舱"规则同样适用于 3D 舱内：场景铺满且位置固定，教程不缩放、不移动场景，常驻状态栏不遮挡物品标签。
+- Use plain English. Scientific names, units and sources may stay as they are, but explain a term the first time it matters (sol, radiation dose, millisievert, conjunction).
+- Put the subject right before the verb. Do not add long phrases between them.
+- One sentence explains one action, one reason or one result.
+- Use short sentences. Avoid many clauses and long comma lists.
+- Do not talk about machines, supplies or places as if they were people ("the solar panel is waiting for you").
+- Buttons name the exact action and object. Avoid vague labels like "Find it" or "See the secret".
+- Button names in tips must match the real buttons exactly.
+- Show the problem first. Then explain the action. After the action, show the real result.
+- The tutorial only moves on after the player does the current action. Closing a tip must never skip the real action.
+- Keep the tutorial in cause-and-effect order: check power → go outside and repair → come back in, clean water and drink → share power → end the day.
+- Keep the science data, conditions and resource costs. Simpler wording must never change a rule.
+- When you change text, check the tutorial, tip cards, buttons, item cards, events, logs, intro and endings.
+- Keep the resource gauges, power sharing and the 3D base view. Do not hide their entry points. Keep third-person control outside.
+- Clicking the Console in the habitat opens the 3D base view directly: gauges on the left, environment on the right, the power card at the bottom center. The log only shows records.
+- No emoji anywhere. Keep the cream, dark ink outline and yellow action button style. Icons use one SVG set or simple shapes.
+- The habitat scene keeps its full-screen size and fixed position. Tutorials may float above it but must never resize or move it. The status bars must not cover object labels.
+- Outside tasks name the place, the action and the result, for example "Scan the ground by the rocket", then explain scanning, saving and Science +6.
+- The player-facing name is always "Console".
+- The habitat, the 3D base view and the third-person trip outside share one "Outpost Status" panel and one set of game data. Oxygen, food, radiation, science, battery and shield must stay visible.
+- The power tutorial shows the minimum power, the current amount and the finish button. "Finish Power Plan" in the tutorial uses the same logic as the button at the bottom.
+- The tutorial only describes evidence the player can see. Before going outside, it only says power is low. Dust or a loose plug is named only after the player walks up and looks. Cleaning and repairs change the same part in the scene and update the power.
+- "Go Outside" must be a real, eye-catching action button, never a switch or checkbox.
+- In this version the habitat is a real-time 3D scene (js/cabin3d.js). All habitat layout rules above apply to it.
+- Data honesty: never present stored data as live. Live NASA DONKI data, the dated DONKI snapshot and the curated archive must each be labelled as what they are.

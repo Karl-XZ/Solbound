@@ -1,175 +1,111 @@
-# 火星前哨 · 三十个火星日（舱内 3D 版）
+# Solbound — Junior Astronaut Mission Trainer
 
-面向少年宇航员的火星基地生存经营游戏，默认使用可交互的 3D 美式复古科幻卡通生活舱（与舱外同一渲染风格），舱外支持第三人称操控宇航员移动与现场工作，并保留开场、结局动画。在杰泽罗陨石坑完成 30 个火星日的任务，每天分配电力，在制氧、温室、辐射屏蔽施工与科研之间作出取舍，并应对太阳风暴、沙尘暴和设备故障。
+**Solbound** is a browser game for kids ages 7–12. You run a small outpost in Jezero Crater on Mars for 30 sols (a sol is one Mars day). Every day there is only so much power. Power you give to the oxygen maker cannot also grow food, build the radiation shield or do science. Solar storms from NASA's DONKI space-weather records, dust storms, broken machines and radio delays push you to make real engineering trade-offs.
 
-在线体验：http://1.14.46.26/mars/
+It was built for the 2026 NASA Space Apps Challenge "Build a Junior Astronaut Mission Trainer".
 
-## 本版本：舱内 3D 版
+## What you do
 
-生活舱从 2D SVG 改为实时 3D 场景。它和舱外使用同一套渲染管线：MeshToonMaterial 三阶色调、深度和颜色描边、暗部网点、噪点和暗角。后期 shader 与 `js/world.js` 相同。
+- **Share the power.** Each sol you split a limited number of power "blocks" between Oxygen, Greenhouse, Shield and Science. Leftover power charges the battery. Every choice has a cost.
+- **Keep the crew alive.** Oxygen, food and radiation dose are the three core gauges. Water, medicine and mood add care decisions inside the habitat.
+- **Plan ahead.** Greenhouse crops take 3 sols to harvest. Shield levels lower radiation every day after you build them. A dust storm cuts solar power to about 30%.
+- **Go outside.** Walk the astronaut around the base in third person. Clean dusty solar panels, plug in a loose connector, scan the ground and collect rock samples. Each trip costs oxygen and adds radiation.
+- **Face real space weather.** Solar storm events come from real NASA DONKI records. The game tries to load the latest DONKI flares when it starts.
+- **Wait for Earth.** Earth–Mars distance and radio delay are calculated for today's date from JPL orbital elements. Asking Earth for help takes real minutes.
+- **Learn from the ending.** Six endings and a mission report show which decisions changed your oxygen, food, radiation and science.
 
-- **场景**：剖开正面的圆柱形居住舱，有肋骨、管线、顶灯和锈红色地板。舷窗外是同一片火星，能看到火箭、温室、居住舱和太阳能板。
-- **宇航员**：沿用舱外宇航员的造型。摘下的头盔夹在胳膊下，脸部是贴图，有高兴、难过、虚弱三种表情。
-- **状态联动**：
-  - 水罐水位跟随饮水量；墙上日历跟随火星日；控制台屏幕显示今日发电；实验台有岩样时显示岩石。
-  - 沙尘暴时窗外起沙，室内偏橙，画面边缘闪红色警示。
-  - 结束当天进入夜晚（`#frame.nightfall`）时，窗外出现星空，室内亮起台灯。
-  - 饮水、食物、药品、心情低于原阈值时，物品发出红色脉冲，标签变成红色并带"!"。
-- **交互**：每个物品都有一个跟随 3D 位置的 DOM 热点，保留原来的 `data-object`、`role="button"`、`tabindex` 和 `aria-label`。点击 3D 模型等同于点击这个热点。悬停或键盘聚焦会让物品发黄光；教程高亮（`.tutorial-target`）同样生效。
-- **界面**：标题、切换按钮、物资栏（几何 SVG 图标）、电量卡、物品卡片、事件卡和提示条，全部改成舱外的卡片样式：直角、墨线边框、实心投影、标题字体。
-- **性能**：只有在舱内时才渲染舱内场景；舱外场景照旧，由 `World.setRendering` 暂停。像素比上限为 1.75。
-- **手机**：和原版一样，舱内画面最小宽度 1000px，可以左右滑动查找物品。
+## Screenshots
 
-**改动的文件**：新增 `js/cabin3d.js`（3D 场景）和 `css/cabin-theme.css`（舱内样式）；改写 `js/habitat.js` 的美术部分（对外接口 `init`、`view`、`render`、`samples`、`card`、`closeCard`、`toast` 不变）；`index.html` 只多引入上面两个文件。游戏逻辑（`game.js`、`world.js`、`expedition*.js`、`data.js`、`astronaut.js`）、数值和文案都没改。
-js/cabin3d.js    舱内实时 3D 场景（与舱外相同的卡通着色与描边/网点后期）
-css/cabin-theme.css  舱内 3D 热点标签与舱外风格统一的界面
-tools/serve.cjs  零依赖本地静态服务（npm start）
-tests/run-tests.cjs  浏览器自测运行器（npm run test:browser）
+Recorded from this build (Chrome, 1920×1080): `docs/screenshots/` — title screen, 3D habitat, Console power sharing, dusty and cleaned solar panels outside, a real DONKI solar-storm event, the Data Sources page and a 30-sol mission report.
 
-**测试调整**（原因：场景从 SVG 换成了 3D）：
-- `tests/browser/cabin-layout.pw.js`：标签选择器从 `.object-caption rect` 改为 `.object-caption`，"标签不被遮挡"的检查保持不变。
-- `tests/browser/shared-station.pw.js`：原来检查 SVG 的 `viewBox`，改为检查舱内 3D 画布存在。"教程不改变场景大小和位置"的检查保持不变。
-- `tests/browser/multiday.pw.js`：这个脚本在原项目里就会失败。游戏现在净水后会自动关闭卡片，所以改成"卡片还开着才点关闭"。
-- 新增 `tests/run-tests.cjs`（自带静态服务的运行器）。`mobile.pw.js` 在 390×844 触屏环境里运行，这是原脚本默认的设备。
-- 新增 `tests/browser/cabin3d-pick.pw.js`：检查直接点 3D 模型能打开同一张物品卡片、悬停会高亮，以及白天、沙尘暴、夜晚三种天气会跟着游戏状态切换。
+## Quick start (Windows, macOS, Linux)
 
-## 快速开始（Windows / macOS / Linux 通用）
+Playing needs only a browser and a static web server (Node.js or Python). No npm packages are needed to play.
 
-只想玩：不需要安装任何依赖。
-
-1. 安装 Node.js 18 或更高版本（https://nodejs.org ）。也可以用任意静态服务器，例如 `python -m http.server 8765`。
-2. 解压后进入项目目录（`package.json` 所在的位置）。
-3. 启动本地服务：
+1. Install Node.js 18 or newer from https://nodejs.org (or use any static web server, for example `python -m http.server 8765`).
+2. Unzip the project and open a terminal in the folder that contains `package.json`.
+3. Start the local server:
 
    ```powershell
-   # Windows PowerShell / CMD，macOS 和 Linux 终端都一样
    npm start
-   # 等价写法：node tools/serve.cjs 8765
+   # same as: node tools/serve.cjs 8765
    ```
 
-4. 用 Chrome、Edge 或 Firefox 打开 http://127.0.0.1:8765/ 。浏览器需要支持 WebGL。
+4. Open http://127.0.0.1:8765/ in Chrome, Edge or Firefox. WebGL must be available.
 
-说明：
-- 不要直接双击 `index.html`（`file://` 方式会被浏览器的安全限制拦住）。请用上面的本地服务打开。
-- 字体从 Google Fonts 在线加载（Noto Sans SC、ZCOOL QingKe HuangYou）。离线时会自动改用系统中文字体（例如微软雅黑），玩法不受影响。
-- Three.js r128、D3、TopoJSON 和地图数据都已放在 `vendor/` 中，不需要联网安装。
-- 项目没有构建步骤。源码就是可运行的成品。
+Notes:
+- Please use the local server. Opening `index.html` directly from the file system is blocked by browser security rules.
+- Everything the game needs is in this folder: Three.js r128, D3, TopoJSON, Natural Earth map data and the Fredoka and Nunito fonts are all in `vendor/`. The game works offline.
+- The only network call is optional: the live NASA DONKI request at start-up (`api.nasa.gov`, public `DEMO_KEY`). The shared DEMO_KEY is often rate-limited; when the call fails, the title screen says "Offline mode" and the game uses its archive of real DONKI events.
+- There is no build step. The source files are the finished game.
 
-## 自测（可选）
+## Controls
+
+- Click (or tap) objects in the habitat: water recycler, water tank, food locker, first aid kit, radio, calendar, lab bench, bed and the astronaut.
+- Click the Console or the power card to open the 3D base view and share power with the − / + buttons.
+- Outside: WASD or arrow keys to move, drag to look around, walk to a yellow marker and press E (or tap the action button). Phones and tablets get an on-screen joystick.
+- Click the bed (or "End the Day" on the Console) to see tonight's gains and losses and start the next sol.
+- Sol 1 has an optional guided tutorial. You can skip it at any time.
+
+## NASA data and how it is used
+
+Open **Data Sources & Notes** on the title screen or the Console to see every source inside the game.
+
+| Data | Where it is used | Type |
+|---|---|---|
+| NASA DONKI flares (live, `api.nasa.gov/DONKI/FLR`) | Strongest flare of the last 30 days becomes a solar-storm event; title screen and Data Sources show the live status | Live when available |
+| Optional DONKI snapshot slot (`data/donki-snapshot.js`) | If a dated, unmodified DONKI FLR download is placed here, it is used only when the live request fails and is labelled "snapshot (not live)". This build ships the slot empty. Without live access or a snapshot, it uses the curated archive. | Optional, empty in this build |
+| Curated DONKI archive events (2012, 2017, 2021, 2024) | Solar-storm events with real dates; the May 20, 2024 storm uses Curiosity RAD's measured dose | Stored real events |
+| Curiosity RAD, Perseverance MOXIE and MEDA, InSight, Opportunity, Spirit, Veggie, Twins Study, NASA-STD-3001 | Facts, numbers and comparisons in cards, events and the mission report | Published NASA results |
+| JPL approximate planetary orbital elements | Earth–Mars distance and radio delay for today's date | Live calculation |
+
+The game also clearly lists what is simplified: power "blocks", the 25 mSv mission limit, water, medicine and mood values, and how fast crops grow are game rules, not real mission numbers. Solar-storm doses marked "game estimate" are estimates.
+
+## Testing
 
 ```powershell
-npm ci                 # 按 package-lock.json 安装开发依赖（只有 Playwright）
-npm run browsers       # 下载 Playwright 自带的 Chromium（约 150 MB，只需一次）
-npm test               # 21 个逻辑/服务测试 + 18 个真实浏览器脚本
+npm ci                 # installs the only dev dependency (Playwright), pinned by package-lock.json
+npm run browsers       # downloads Playwright's Chromium once (about 150 MB)
+npm test               # 27 logic, English-content and server tests + 19 browser scripts
 ```
 
-- 只跑逻辑测试：`npm run test:logic`（不需要安装任何依赖）。
-- 只跑某个浏览器脚本：`node tests/run-tests.cjs first-day`。
-- 想用本机已装的 Chrome，不下载 Chromium：PowerShell 里先执行 `$env:CHROME_PATH="C:\Program Files\Google\Chrome\Application\chrome.exe"`，再运行 `npm run test:browser`。
-- `tests/run-tests.cjs` 会自带一个静态服务（端口 8766），依次运行 `tests/browser/*.pw.js`。结果写入 `output/test-results.json`，截图在 `output/playwright/`。
+- Logic tests only: `npm run test:logic` (no install needed).
+- One browser script: `node tests/run-tests.cjs first-day`.
+- To use an installed Chrome instead of downloading Chromium (PowerShell): `$env:CHROME_PATH="C:\Program Files\Google\Chrome\Application\chrome.exe"; npm run test:browser`.
+- `tests/run-tests.cjs` starts its own static server on port 8766, runs `tests/browser/*.pw.js`, writes `output/test-results.json` and screenshots to `output/playwright/`.
 
-## 本地运行
-
-项目使用原生 HTML、CSS 和 JavaScript，无需安装前端依赖或构建。
-
-在项目目录运行：
-
-```sh
-python -m http.server 8765 --bind 127.0.0.1
-```
-
-浏览器打开 http://127.0.0.1:8765/ 。需要支持 WebGL 的现代浏览器。
-
-## 游戏操作
-
-- 点击“开始任务”看开场，或“跳过开场”直接进入基地；第一天可选择跟着学，也可随时跳过引导。
-- 仓内点击实际物品：净水机、水桶、食物箱、急救箱和宇航员；资源数值、水位、表情会随行动变化。
-- 仓内下方常驻电量卡，显示今日发电、正常发电、电池余量和可分配电力；净水、维修等操作后立即更新。
-- 3D 生活舱保持全屏尺寸和固定位置。教程悬浮显示，开关教程不改变场景。舱内、3D 全景和第三人称出舱共用同一个前哨站状态栏。底部保留生活物资和电量信息。界面不使用 emoji。
-- 教程中的名称统一为“控制台”。分电步骤显示最低需求和当前分配。教程卡与底部的“完成分电”使用相同操作。制氧至少分配 3 格后可继续。
-- 点击电量卡或控制台查看故障线索，再安排制氧、温室、屏蔽和科研用电。设备预测同步更新；作物投入三天后收获。
-- 点击控制台或电量卡直接进入原有 3D 基地控制台。左侧显示氧气、食物、辐射、科学、电池和屏蔽。右侧显示环境信息。底部中央分配制氧、温室、屏蔽和科研用电。日记只显示记录。查看控制台不消耗资源；“出舱探索”会检查并收取实际出舱费用。
-- 点击舱门检查天气和代价后出发。每趟固定消耗氧气与辐射额度，走路、看说明和练习操作不持续扣氧气。
-- 舱外用 WASD / 方向键移动，拖动画面转动跟随镜头；走到金色标记旁按 E，或点击屏幕下方互动按钮。
-- 手机和平板提供移动摇杆；拖动画面转头，右侧按钮完成互动。“镜头回正”可恢复默认朝向。
-- 亲手清扫板面、接回松脱部件、扫描和收集岩样。工作完成后才改变设备状态；取消与重试不提前领奖或重复扣费。
-- 日常维护任务会随积灰和故障继续出现。每天可到火箭旁扫描地面并保存结果，获得科学 +6；同一个任务不会重复发奖。
-- 岩样先放在背包，经舱门回仓后出现在实验台；点击实验台花 2 格可用电分析，再获得科学成果。
-- 走回舱门按 E 回仓；迷路可打开“基地地图”请求伙伴带到舱门，不自动完成任务。
-- 点击床查看今晚资源收支并确认休息，进入下一天；控制台中的“结束今天”也能打开相同确认。教程中的“完成分电”会先返回生活舱，再指导玩家点击床。
-- 第一天先查看发电量。然后出舱学习移动、检查、清扫和维修。回舱后再学习净水、饮水、分电和休息。跳过引导保留已做的事，不赠送奖励、不代做工作。
-- 教程先显示发电偏低，再用黄色“出舱探索”按钮进入出舱检查。走到太阳能板旁后，可看到板面的棕色灰尘和未插紧的橙色接头。清扫后灰尘消失；接好后插头归位变绿，发电量随之恢复。设备不在视野内时，教程提供“查看太阳能板”按钮。
-- 每日事件在行动前出现，展示完整选项。亲自维修、清扫和采样会创建现场任务；漫游车、等待等替代方案保留。
-- 风暴、日凌暂停出舱与避难会限制出发；太阳爆发期间可以理解辐射代价后选择继续工作。资源数值是游戏简化值。
-- “今日手册”和“事件档案”保留任务记录与历史；数据来源和科学解释可从控制台打开。支持键盘浏览和物品 Enter / 空格操作。
-
-## 项目结构
+## Project structure
 
 ```text
-index.html       页面和界面结构
-css/journal.css  双笔记本、分页与响应式界面
-css/habitat.css  卡通生活舱、物品卡片、资源 HUD 与事件弹窗
-css/console.css  原有 3D 基地仪表、环境卡和底部能源分配
-css/cabin-layout.css  固定生活舱场景、悬浮教程与统一状态栏
-js/habitat.js    SVG 场景、物品热点、角色表情与生活舱界面
-js/game.js       游戏状态、资源结算、事件与界面交互
-js/world.js      Three.js 场景、角色跟随镜头、碰撞与动画
-js/astronaut.js  键盘/摇杆移动计算
-js/expedition-model.js  任务、样品与教程状态
-js/expedition.js  现场工作、舱内外衔接与首日引导
-css/expedition.css  儿童操作界面与触屏布局
-tests/           逻辑回归与真实浏览器检查
-js/audio.js      浏览器合成音效
-js/data.js       科学常数、事件存档与 NASA DONKI 数据访问
-vendor/          Three.js、D3、TopoJSON 和地理数据
-deploy/          Nginx 路径配置
+index.html            page structure and title/HUD styles
+css/                  habitat, Console, expedition, notebook and cabin theme styles
+js/data.js            real data layer: constants with sources, DONKI archive, live DONKI + snapshot fallback, JPL distance
+js/game.js            game state, daily resource settlement, events, interface
+js/world.js           Three.js Mars surface, base, intro and endings (toon shading, ink outlines, halftone)
+js/cabin3d.js         real-time 3D habitat rendered with the same pipeline
+js/habitat.js         habitat hotspots, item cards and accessibility labels
+js/expedition.js      trips outside: departure check, tasks, tutorial guide
+js/expedition-model.js, js/astronaut.js   task state machine and movement (unit tested)
+js/audio.js           all sound is synthesized live with Web Audio (no audio files)
+data/donki-snapshot.js  optional dated DONKI FLR snapshot slot (empty in this build; never shown as live)
+vendor/               Three.js r128, D3, TopoJSON, Natural Earth data, fonts (with licenses)
+tools/serve.cjs       zero-dependency local server (npm start)
+tests/                logic tests and Playwright browser scripts (tests/run-tests.cjs)
+deploy/mars.conf      example nginx config for hosting under /mars/
+docs/screenshots/     recorded gameplay screenshots
 ```
 
-## 数据与联网
+## Credits and licenses
 
-核心 3D 库和地理数据随项目提供。Google Fonts 字体仍通过网络加载，不可用时使用系统字体。
+- Three.js (MIT), D3 and TopoJSON (ISC), Natural Earth (public domain) — see `vendor/`.
+- Fredoka and Nunito fonts — SIL Open Font License 1.1, see `vendor/fonts/OFL-*.txt`.
+- NASA data is used as public information and cited in the game. Solbound is not made or endorsed by NASA, and it does not use NASA logos or mission insignia.
+- Super Intelligence (SI) disclosure: the game code, art (procedural 3D and SVG) and text were written with the help of an AI coding assistant (Claude) under the team's direction. All sounds are synthesized in code at runtime.
 
-游戏尝试使用 NASA DONKI 公开接口获取近期太阳耀斑，接口不可用时自动使用内置事件存档。代码中的 `DEMO_KEY` 是 NASA 的公共演示参数。科学测量与游戏简化值在 `js/data.js` 及页面“数据来源与说明”中标注。
+## Import verification (2026-11-15)
 
-## 部署到 /mars/
+This English-only build replaces the Chinese runtime on `main`. The previous fixes for malformed local-server URLs, filesystem confinement, browser-test error reporting, reduced motion and short landscape screens are retained. English resource names and 3D captions were checked for overlap at desktop, portrait-phone and landscape-phone sizes.
 
-将 `index.html`、`css/`、`js/` 和 `vendor/` 放到服务器 `/var/www/mars/`。将 `deploy/mars.conf` 加入 Nginx 对应站点的 `server` 配置；配置假设该站点的 `root` 为 `/var/www`。
+English-content tests reject untranslated Chinese in authored runtime HTML, CSS, JavaScript and data. NASA tests distinguish live data, dated snapshots and the curated archive. An offline browser test blocks all external requests, checks the bundled English fonts, opens item cards and verifies source labels.
 
-检查配置并重新加载：
-
-```sh
-sudo nginx -t
-sudo systemctl reload nginx
-```
-
-访问 `/mars` 会跳转到 `/mars/`。静态文件使用相对路径，可由普通静态文件服务器托管。
-
-## 第三方资源
-
-`vendor/` 中包含 Three.js r128、D3、TopoJSON 和 Natural Earth 衍生地理数据。保留第三方文件中的版权声明；使用与分发时请遵循各自的许可。
-
-## 开发验证
-
-无需安装游戏依赖。使用 Node.js 运行逻辑测试：
-
-```sh
-node --test tests/expedition.test.cjs
-```
-
-真实浏览器验证脚本位于 `tests/browser/`。启动静态服务后，用已安装的 Playwright CLI 打开 `http://127.0.0.1:8766/?debug`，再调用 `run-code --filename tests/browser/first-day.pw.js`；其余脚本检查跳过路径、采样分析、手机摇杆和完整 30 日资源循环。
-浏览器脚本默认使用 8766 端口，截图保存在被 Git 忽略的 `output/playwright/`。30 日模拟采用固定事件表，并通过真实任务状态机模拟现场工作的结果；实地移动和工作步骤另由首日与采样脚本验证。
-
-`tests/browser/intro-transition.pw.js` 检查完整开场、提前跳过、中途跳过和直接进入。它逐帧比较停止开场前后的镜头位置与朝向，并检查切换到火星表面时遮罩已完全覆盖。开场停止后会保留当前镜头，避免恢复标题页视角。
-
-儿童文案规则记录在 `AGENTS.md`。提示使用短句和具体按钮名。教程只突出当前操作。
-
-推荐做法：`npm test`，或参照上文"自测"一节。`tests/run-tests.cjs` 已自带静态服务和 Playwright 驱动，不再需要手动打开 Playwright CLI。
-
-## 本次导入后的检查与修复（2026-11-14）
-
-- 导入 `mars-eva-cabin-3d-project.zip`，保留主分支的游戏数值和第三人称舱外任务。
-- 修复小高度横屏（844×390）底部栏遮住物品标签的问题；仅调整 HUD，场景和镜头不变。
-- 3D 舱内遵循系统的“减少动态效果”设置，关闭装饰性晃动、闪烁和动态噪点；状态更新与物品操作照常。
-- 本地服务对异常网址返回 400，限制文件访问范围，不因错误网址退出。
-- 浏览器自测遇到页面脚本异常会判为失败，启动失败也会清理服务后退出。
-- 检查覆盖完整教程、清扫接线、采样分析、分电、30 天事件结算、开场转场、结局重开，以及桌面、手机竖屏和横屏。详见 `docs/verification-2026-11-14.md`。
+See `docs/verification-2026-11-15.md` for the final checks and limitations. The game contains no language selector; archived development documents may retain their original language.

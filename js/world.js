@@ -1,16 +1,16 @@
 /* =====================================================================
-   海报风 3D 世界
-   卡通色阶 + 分层雾 + 墨线描边 + 印刷网点 + 纸纹
-   - 太空场景：真实海岸线的地球（Natural Earth 1:110m）、火星、月球
-   - 火星地表：一座会随玩家决策生长、受损、修复的前哨站
-   - 结局动画：样本发射 / 新乘组降落 / 仰望地球 / 返航 / 紧急撤离
+   Poster-style 3D world
+   Toon shading + layered fog + ink outlines + print halftone + paper grain
+   - Space scenes: Earth with real coastlines (Natural Earth 1:110m), Mars and the Moon
+   - Mars surface: an outpost that grows, gets damaged and gets repaired with the player's choices
+   - Ending scenes: sample launch / new crew landing / looking up at Earth / flying home / emergency evacuation
    ===================================================================== */
 window.World = (function () {
   const V3 = (x, y, z) => new THREE.Vector3(x, y, z);
   const P = { cream: 0xf4e7c8, mustard: 0xe6a83f, orange: 0xd9692f, rust: 0xb8452a, brick: 0x8e2f22, maroon: 0x5a1d1d,
     night: 0x2b1a24, navy: 0x1f2c3f, teal: 0x3f8f93, tealL: 0x8cc7c3, tealD: 0x2a5f68, green: 0x7fae5b, red: 0xff5a30 };
 
-  /* ---------- 噪声与地形 ---------- */
+  /* ---------- noise and terrain ---------- */
   function hash(x, y) { let h = Math.imul(x | 0, 374761393) + Math.imul(y | 0, 668265263); h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; }
   function vnoise(x, y) { const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi, u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
     const a = hash(xi, yi), b = hash(xi + 1, yi), c = hash(xi, yi + 1), d = hash(xi + 1, yi + 1); return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v; }
@@ -29,7 +29,7 @@ window.World = (function () {
   const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
   const backOut = k => 1 + 2.70158 * Math.pow(k - 1, 3) + 1.70158 * Math.pow(k - 1, 2);
 
-  /* ---------- 全局 ---------- */
+  /* ---------- globals ---------- */
   let renderer, rt, postM, postS, postC, camera, stage, grad, FOGQ;
   let mode = 'space';
   let rendering = true;
@@ -55,13 +55,13 @@ window.World = (function () {
   }
   let M = {};
 
-  /* ======================= 动画工具 ======================= */
+  /* ======================= Animation tools ======================= */
   const tweens = [];
   function tween(dur, f, done) { const t = { t0: NOW, dur, f, done }; tweens.push(t); return t; }
   function runTweens() {
     for (let i = tweens.length - 1; i >= 0; i--) { const t = tweens[i]; const k = Math.min(1, (NOW - t.t0) / t.dur); t.f(k); if (k >= 1) { tweens.splice(i, 1); t.done && t.done(); } }
   }
-  // 烟团：低多边形卡通云，进入主场景，享受描边与网点
+  // puffs: low-poly cartoon clouds in the main scene, with outlines and halftone
   const puffs = [];
   function initPuffs(scene) {
     const g = new THREE.IcosahedronGeometry(1, 1);
@@ -84,7 +84,7 @@ window.World = (function () {
   function burst(pos, n = 10, mat = 'dust', r = 3) {
     for (let i = 0; i < n; i++) { const a = i / n * 6.283; puff(V3(pos.x + Math.cos(a) * r * .3, pos.y + .3, pos.z + Math.sin(a) * r * .3), { mat, vel: V3(Math.cos(a) * r, .8 + Math.random(), Math.sin(a) * r), s0: .5, s1: 1.6 + Math.random(), life: 1.4, drag: .93 }); }
   }
-  // 火花/尘粒：叠加层的小点
+  // sparks/dust: small dots in the overlay
   let sparks;
   function initSparks(overlay) {
     const N = 500, g = new THREE.BufferGeometry();
@@ -112,7 +112,7 @@ window.World = (function () {
       if (u.life[i] <= 0) sa.setX(i, 0); }
     pa.needsUpdate = true; sa.needsUpdate = true; sparks.geometry.attributes.color.needsUpdate = true;
   }
-  // 出现：弹出 + 尘土 + 火花
+  // appear: pop + dust + sparks
   function pop(obj, at) {
     obj.visible = true; obj.scale.setScalar(.001);
     const p = at || obj.getWorldPosition(V3());
@@ -121,7 +121,7 @@ window.World = (function () {
     tween(1100, k => obj.scale.setScalar(Math.max(.001, backOut(k))));
   }
 
-  /* ======================= 物件工厂 ======================= */
+  /* ======================= Object factory ======================= */
   function mesh(geo, mat, par) { const o = new THREE.Mesh(geo, mat); o.castShadow = o.receiveShadow = true; par && par.add(o); return o; }
   function makeAstro(accent = P.orange) {
     const a = new THREE.Group(), suit = M.cream;
@@ -180,7 +180,7 @@ window.World = (function () {
     return r;
   }
 
-  /* ======================= 地表场景 ======================= */
+  /* ======================= Surface scene ======================= */
   function buildSurface() {
     const scene = new THREE.Scene(), overlay = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0xe39a55, .0066);
@@ -191,7 +191,7 @@ window.World = (function () {
       tealGlow: new THREE.MeshBasicMaterial({ color: P.tealL }), panel: toon(P.tealD), plant: toon(P.green), glass: toon(P.tealD, { transparent: true, opacity: .5 }) });
     initPuffs(scene); initSparks(overlay);
 
-    // 天空
+    // sky
     const sky = new THREE.ShaderMaterial({ side: THREE.BackSide, fog: false,
       uniforms: { sun: { value: V3(0, 1, 0) }, earth: { value: earthDir }, time: { value: 0 }, px: { value: 1 }, night: { value: 0 }, storm: { value: 0 }, aurora: { value: 0 }, flash: { value: 0 } },
       vertexShader: `varying vec3 v;void main(){v=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
@@ -246,7 +246,7 @@ window.World = (function () {
     S.lampGh = new THREE.PointLight(0x9cff9a, 0, 18, 2); scene.add(S.lampGh);
     S.lampAlarm = new THREE.PointLight(0xff4020, 0, 30, 2); S.lampAlarm.position.set(0, 8, 0); scene.add(S.lampAlarm);
 
-    // 地形
+    // terrain
     const g = new THREE.PlaneGeometry(800, 800, 300, 300); g.rotateX(-Math.PI / 2);
     const pos = g.attributes.position, col = new Float32Array(pos.count * 3);
     const cR = new THREE.Color(P.rust), cO = new THREE.Color(0xc65a33), cB = new THREE.Color(P.brick);
@@ -256,7 +256,7 @@ window.World = (function () {
     S.groundMat = toon(0xffffff, { vertexColors: true });
     const ground = new THREE.Mesh(g, S.groundMat); ground.receiveShadow = true; scene.add(ground);
 
-    // 岩石（避开基地）
+    // rocks (away from the base)
     const rocks = new THREE.InstancedMesh(new THREE.DodecahedronGeometry(1, 0), M.rock, 520);
     const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sv = V3();
     for (let i = 0; i < 520; i++) { const a = Math.random() * 6.283, r = 42 + Math.pow(Math.random(), .7) * 90, x = Math.cos(a) * r, z = Math.sin(a) * r, s = .3 + Math.pow(Math.random(), 3) * 2.2;
@@ -265,7 +265,7 @@ window.World = (function () {
 
     buildBase(scene);
 
-    // 叠加层：信号、尘埃
+    // overlay: signal, dust
     S.dishTip = V3(-6, 10.6, -12);
     S.earthPt = earthDir.clone().multiplyScalar(850);
     S.line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([S.dishTip, S.earthPt]), new THREE.LineDashedMaterial({ color: P.cream, dashSize: 3, gapSize: 5, fog: false, transparent: true, opacity: 0 })); S.line.computeLineDistances(); overlay.add(S.line);
@@ -283,13 +283,13 @@ window.World = (function () {
     });
   }
 
-  /* ======================= 基地：所有可生长的部件 ======================= */
+  /* ======================= Base: every part that can grow ======================= */
   const MOD_ANG = [2.1, 4.2, 0, 5.3];
   const DOMES = [V3(-12, 0, -2), V3(-15, 0, 10), V3(-23, 0, 1)];
   function buildBase(scene) {
     const base = new THREE.Group(); scene.add(base); B.base = base;
     B.windows = [];
-    // 中央枢纽
+    // central hub
     const hub = new THREE.Group(); base.add(hub); B.hub = hub;
     mesh(new THREE.CylinderGeometry(3.3, 3.5, 2.6, 40), M.cream, hub).position.y = 1.3;
     mesh(new THREE.SphereGeometry(3.3, 40, 16, 0, 6.283, 0, Math.PI / 2), M.cream, hub).position.y = 2.6;
@@ -297,12 +297,12 @@ window.World = (function () {
     for (let i = 0; i < 8; i++) { const a = i / 8 * 6.283; const w = mesh(new THREE.BoxGeometry(.6, .5, .1), M.win, hub); w.position.set(Math.cos(a) * 3.42, 1.4, Math.sin(a) * 3.42); w.rotation.y = -a + Math.PI / 2; w.userData.grp = 'hub'; B.windows.push(w); }
     B.beacon = mesh(new THREE.SphereGeometry(.35, 12, 8), M.red, hub); B.beacon.position.y = 6.1; B.beacon.visible = false;
     mesh(new THREE.CylinderGeometry(.06, .06, .5, 6), M.navy, hub).position.y = 5.8;
-    // 辐射警示牌
+    // radiation warning sign
     const sign = new THREE.Group(); sign.position.set(4.5, 0, 4.5); base.add(sign); B.sign = sign;
     mesh(new THREE.CylinderGeometry(.07, .07, 2.6, 6), M.navy, sign).position.y = 1.3;
     B.signFace = new THREE.Mesh(new THREE.CylinderGeometry(.75, .75, .1, 3), new THREE.MeshBasicMaterial({ color: P.mustard })); B.signFace.rotation.x = Math.PI / 2; B.signFace.position.y = 2.7; sign.add(B.signFace);
     sign.visible = false;
-    // 舱段（含实验舱）与屏蔽土堆
+    // modules (including the lab) and shield mounds
     B.mods = []; B.mounds = [];
     MOD_ANG.forEach((ang, idx) => {
       const grp = new THREE.Group(); grp.rotation.y = -ang; base.add(grp);
@@ -317,11 +317,11 @@ window.World = (function () {
       const p2 = md.geometry.attributes.position; for (let i = 0; i < p2.count; i++) { const v = V3().fromBufferAttribute(p2, i); const n = .88 + .24 * vnoise(v.x * 3 + 7 + ang, v.z * 3 + v.y * 2); p2.setXYZ(i, v.x * n, v.y * n, v.z * n); } md.geometry.computeVertexNormals();
       md.userData.cur = 0; md.visible = false; B.mounds.push(md);
     });
-    // 沙袋墙（屏蔽 ≥2 级）
+    // sandbag wall (shield level 2+)
     B.sandbags = new THREE.Group(); base.add(B.sandbags);
     for (let i = 0; i < 22; i++) { const a = .8 + i / 22 * 1.9; const s = mesh(new THREE.BoxGeometry(1.1, .55, .7), M.rock, B.sandbags); s.position.set(Math.cos(a) * 5.6, .28 + (i % 2) * .5, Math.sin(a) * 5.6); s.rotation.y = -a; }
     B.sandbags.visible = false;
-    // 温室群
+    // greenhouses
     B.domes = []; B.plants = [];
     DOMES.forEach((p, i) => {
       const gh = new THREE.Group(); gh.position.copy(p); base.add(gh);
@@ -335,7 +335,7 @@ window.World = (function () {
       gh.userData.tube = tube; gh.visible = tube.visible = i === 0; B.domes.push(gh);
     });
     S.lampGh.position.set(-12, 2.5, -2);
-    // 太阳能阵列：每一行 4 块板
+    // solar array: 4 panels per row
     const arr = new THREE.Group(); arr.position.set(16, 0, -8); arr.rotation.y = Math.atan2(lightDir.x, lightDir.z); base.add(arr); B.arr = arr;
     B.rows = [];
     const panelDustMaterial = new THREE.MeshBasicMaterial({color:0xc59b70,side:THREE.DoubleSide});
@@ -363,11 +363,11 @@ window.World = (function () {
     B.solarLamp=mesh(new THREE.SphereGeometry(.15,10,8),new THREE.MeshBasicMaterial({color:P.orange}),connection);
     B.solarLamp.position.set(-.5,.5,.4);
     B.solarCable=new THREE.Line(new THREE.BufferGeometry(),new THREE.LineBasicMaterial({color:P.navy}));connection.add(B.solarCable);
-    // 电池组
+    // battery bank
     const bat = new THREE.Group(); bat.position.set(8, 0, 8); bat.rotation.y = -.4; base.add(bat); B.bat = bat; B.cells = [];
     for (let i = 0; i < 6; i++) { const cab = mesh(new THREE.BoxGeometry(1.1, 1.8, 1.1), i < 4 ? M.navy : M.tealD, bat); cab.position.set(i * 1.3 - 3.2, .9, 0); if (i >= 4) { cab.visible = false; cab.userData.extra = true; } }
     for (let i = 0; i < 12; i++) { const c = new THREE.Mesh(new THREE.BoxGeometry(.8, .16, .05), M.tealGlow); const cabI = Math.floor(i / 2); c.position.set(cabI * 1.3 - 3.2, .55 + (i % 2) * .5, .57); bat.add(c); B.cells.push(c); }
-    // 制氧站
+    // oxygen station
     const o2 = new THREE.Group(); o2.position.set(4, 0, -16); base.add(o2); B.o2 = o2;
     mesh(new THREE.BoxGeometry(3.2, 2.4, 2.4), M.cream, o2).position.y = 1.2;
     mesh(new THREE.CylinderGeometry(.35, .35, 2.2, 10), M.navy, o2).position.set(.9, 3.4, 0);
@@ -378,14 +378,14 @@ window.World = (function () {
       mesh(new THREE.SphereGeometry(.6, 16, 8, 0, 6.283, 0, Math.PI / 2), M.white, t).position.y = 2.6;
       const band = new THREE.Mesh(new THREE.CylinderGeometry(.63, .63, .35, 16), M.tealGlow); band.position.y = 1.3; t.add(band); t.userData.band = band;
       t.visible = i < 2; B.tanks.push(t); }
-    // 天线
+    // antenna
     const ant = new THREE.Group(); ant.position.set(-6, 0, -12); base.add(ant); B.ant = ant;
     mesh(new THREE.CylinderGeometry(.14, .22, 10, 8), M.navy, ant).position.y = 5;
     const dishPivot = new THREE.Group(); dishPivot.position.y = 10; ant.add(dishPivot); B.dish = dishPivot;
     const dish = mesh(new THREE.SphereGeometry(2, 32, 12, 0, 6.283, 0, 1.05), toon(P.cream, { side: THREE.DoubleSide }), dishPivot);
     dishPivot.lookAt(earthDir.clone().multiplyScalar(-100).add(V3(-6, 10, -12))); dish.rotation.x = Math.PI / 2;
     B.antBeacon = new THREE.Mesh(new THREE.SphereGeometry(.18, 8, 8), M.red); B.antBeacon.position.y = 10.4; ant.add(B.antBeacon);
-    // 科学站：随科学成果逐步出现
+    // science station: appears as science grows
     const sci = new THREE.Group(); sci.position.set(16, 0, 14); base.add(sci); B.sci = [];
     const mast = new THREE.Group(); sci.add(mast); mesh(new THREE.CylinderGeometry(.08, .08, 4, 6), M.navy, mast).position.y = 2;
     B.vane = new THREE.Group(); B.vane.position.y = 4; mast.add(B.vane);
@@ -402,13 +402,13 @@ window.World = (function () {
         const fl = mesh(new THREE.BoxGeometry(2, 1.2, .05), M.orange, g); fl.position.set(1, 4.3, 0); g.userData.flag = fl; return g; }]
     ];
     for (const [th, fn] of parts) { const o = fn(); o.visible = false; o.userData.th = th; sci.add(o); B.sci.push(o); }
-    // 舱外考察点（三角洲）
+    // field site (the delta)
     const eva = new THREE.Group(); eva.position.set(-30, H(-30, -22), -22); base.add(eva); B.eva = eva; B.evaFlags = [];
     const deltaRock = mesh(new THREE.DodecahedronGeometry(2, 0), toon(0xc9a16a, { flatShading: true }), eva); deltaRock.scale.set(1.5, .8, 1.2); deltaRock.position.y = .8;
     for (let i = 0; i < 6; i++) { const f = new THREE.Group(); const a = i * 1.05; f.position.set(Math.cos(a) * 4.5, 0, Math.sin(a) * 4.5); eva.add(f);
       mesh(new THREE.CylinderGeometry(.04, .04, 2, 5), M.navy, f).position.y = 1; mesh(new THREE.BoxGeometry(.7, .45, .04), i === 5 ? M.mustard : M.orange, f).position.set(.36, 1.8, 0);
       f.visible = false; B.evaFlags.push(f); }
-    // 挖土机
+    // digger
     const ex = new THREE.Group(); base.add(ex); B.ex = ex;
     mesh(new THREE.BoxGeometry(2.4, .7, 1.6), M.navy, ex).position.y = .35;
     mesh(new THREE.BoxGeometry(1.8, 1, 1.4), M.mustard, ex).position.y = 1.2;
@@ -416,7 +416,7 @@ window.World = (function () {
     const arm = new THREE.Group(); arm.position.set(.9, 1.5, 0); ex.add(arm); B.exArm = arm;
     mesh(new THREE.BoxGeometry(2.4, .25, .25), M.mustard, arm).position.x = 1.2;
     mesh(new THREE.BoxGeometry(.8, .6, 1.1), M.navy, arm).position.set(2.5, -.4, 0);
-    // 漫游车
+    // rover
     const rover = new THREE.Group(); scene.add(rover); B.rover = rover;
     mesh(new THREE.BoxGeometry(2.8, .9, 1.7), M.cream, rover).position.y = 1.15;
     mesh(new THREE.BoxGeometry(1.2, .12, 1.6), M.tealD, rover).position.set(-.5, 1.66, 0);
@@ -424,25 +424,25 @@ window.World = (function () {
     mesh(new THREE.BoxGeometry(.5, .36, .42), M.orange, rover).position.set(.9, 2.9, 0);
     for (const x of [-1, 0, 1]) for (const z of [-1, 1]) { const w = mesh(new THREE.CylinderGeometry(.45, .45, .36, 14), M.navy, rover); w.rotation.x = Math.PI / 2; w.position.set(x * 1.1, .45, z); }
     B.roverCable = new THREE.Line(new THREE.BufferGeometry().setFromPoints([V3(), V3()]), new THREE.LineBasicMaterial({ color: P.night })); scene.add(B.roverCable); B.roverCable.visible = false;
-    // 上升器（返航火箭）与发射台
+    // ascent vehicle (rocket home) and launch pad
     const pad = new THREE.Group(); pad.position.set(-17, H(-17, 26), 26); base.add(pad); B.pad = pad;
     mesh(new THREE.CylinderGeometry(3.4, 3.6, .4, 24), M.navy, pad).position.y = .2;
     for (let i = 0; i < 4; i++) { const a = i / 4 * 6.283 + .4; const l = mesh(new THREE.BoxGeometry(.25, 3, .25), M.grey, pad); l.position.set(Math.cos(a) * 2.6, 1.6, Math.sin(a) * 2.6); }
     B.rocket = makeRocket(); B.rocket.position.y = .4; pad.add(B.rocket);
     B.tower = mesh(new THREE.BoxGeometry(.6, 11, .6), M.grey, pad); B.tower.position.set(2.6, 5.5, 0);
-    // 补给舱与新乘组舱
+    // supply pod and new crew pod
     B.pods = []; for (let i = 0; i < 2; i++) { const c = makeCapsule(false); c.position.set(26 + i * 4.5, 0, 6 + i * 3); c.visible = false; c.userData.chute.visible = false; base.add(c); B.pods.push(c); }
     B.crewPods = []; for (let i = 0; i < 2; i++) { const c = makeCapsule(true); c.visible = false; scene.add(c); B.crewPods.push(c); }
-    // 宇航员：主角 + 锻炼者 + 结局乘组
+    // astronauts: hero + exerciser + ending crew
     B.astro = makeAstro(); scene.add(B.astro); B.astroPos = V3(4, 0, 10);
     B.runner = makeAstro(P.teal); B.runner.visible = false; scene.add(B.runner);
     B.crew = [P.orange, P.teal, P.mustard, P.green].map(c => { const a = makeAstro(c); a.visible = false; scene.add(a); return a; });
-    // 尘卷风
+    // dust devil
     const dv = new THREE.Group(); dv.visible = false; scene.add(dv); B.devil = dv;
     for (let i = 0; i < 7; i++) { const ring = mesh(new THREE.TorusGeometry(.7 + i * .45, .22 + i * .03, 6, 16), toon(0xc9663a, { flatShading: true }), dv); ring.rotation.x = Math.PI / 2; ring.position.y = i * 1.6; ring.castShadow = false; }
   }
 
-  /* ---------- 状态同步：玩家的每个决定都会写到这里 ---------- */
+  /* ---------- state sync: every player decision is written here ---------- */
   function applyVis(initial) {
     const v = vis;
     B.rows.forEach(row=>row.userData.panels.forEach(panel=>{panel.userData.dust.visible=v.panelEff<.98;}));
@@ -466,7 +466,7 @@ window.World = (function () {
       () => { burst(V3(at.x, gy, at.z), 14, 'dust', 5); tween(1200, k => { c.userData.chute.scale.setScalar(Math.max(.001, 1 - k)); c.userData.chute.position.x = k * 5; }, () => { c.userData.chute.visible = false; c.userData.landing = false; done && done(); }); });
   }
 
-  /* ======================= 太空场景 ======================= */
+  /* ======================= Space scene ======================= */
   const PLANET_VS = `varying vec3 vN,vO,vW;varying vec2 vUv;void main(){vUv=uv;vO=normalize(position);vN=normalize(mat3(modelMatrix)*normal);vec4 w=modelMatrix*vec4(position,1.);vW=w.xyz;gl_Position=projectionMatrix*viewMatrix*w;}`;
   const NOISE3 = `float h3(vec3 p){p=fract(p*.3183099+.1);p*=17.;return fract(p.x*p.y*p.z*(p.x+p.y+p.z));}
     float n3(vec3 x){vec3 i=floor(x),f=fract(x);f=f*f*(3.-2.*f);
@@ -474,7 +474,7 @@ window.World = (function () {
                  mix(mix(h3(i+vec3(0,0,1)),h3(i+vec3(1,0,1)),f.x),mix(h3(i+vec3(0,1,1)),h3(i+vec3(1,1,1)),f.x),f.y),f.z);}
     float fb3(vec3 p){float s=0.,a=.5;for(int i=0;i<5;i++){s+=a*n3(p);p*=2.03;a*=.5;}return s;}
     vec3 hx(float r,float g,float b){return vec3(r,g,b)/255.;}`;
-  // 用 Natural Earth 1:110m 的真实海岸线，画一张海报配色的等距圆柱投影地图
+  // draw a poster-colored equirectangular map from the real Natural Earth 1:110m coastlines
   function earthTexture() {
     const W = 2048, Hh = 1024, c = document.createElement('canvas'); c.width = W; c.height = Hh; const g = c.getContext('2d');
     g.fillStyle = '#3f8f93'; g.fillRect(0, 0, W, Hh);
@@ -485,7 +485,7 @@ window.World = (function () {
       g.beginPath(); path(land); g.fillStyle = '#7fae5b'; g.fill();
       g.save(); g.beginPath(); path(land); g.clip();
       const rect = (lo0, la0, lo1, la1, col) => { const a = proj([lo0, la1]), b = proj([lo1, la0]); g.fillStyle = col; g.fillRect(a[0], a[1], b[0] - a[0], b[1] - a[1]); };
-      // 印刷网点：从中心向外渐渐变小，边缘自然消失
+      // print halftone: dots shrink from the center and fade at the edge
       const blob = (lo, la, rx, ry, col) => { const p = proj([lo, la]), RX = rx * W / 360, RY = ry * Hh / 180; g.fillStyle = col;
         for (let y = p[1] - RY * 1.3; y < p[1] + RY * 1.3; y += 7) for (let x = p[0] - RX * 1.3 + ((y / 7 | 0) % 2) * 3.5; x < p[0] + RX * 1.3; x += 7) {
           const n = vnoise(x * .02, y * .02) * .6, d = Math.hypot((x - p[0]) / RX, (y - p[1]) / RY) - n + .3, r = 4.6 * (1 - d);
@@ -565,7 +565,7 @@ window.World = (function () {
     const rl = new THREE.Line(new THREE.BufferGeometry().setFromPoints(SP.route.getPoints(200)), new THREE.LineDashedMaterial({ color: P.mustard, dashSize: 3, gapSize: 4 })); rl.computeLineDistances(); scene.add(rl);
   }
 
-  /* ======================= 后期 ======================= */
+  /* ======================= Post-processing ======================= */
   function buildPost() {
     postM = new THREE.ShaderMaterial({ depthWrite: false, depthTest: false, uniforms: { tC: { value: rt.texture }, tD: { value: rt.depthTexture }, res: { value: new THREE.Vector2() }, px: { value: 1 },
       near: { value: camera.near }, far: { value: camera.far }, time: { value: 0 }, skyD: { value: 900 }, edgeFar: { value: 520 }, flash: { value: 0 }, alarm: { value: 0 } },
@@ -601,7 +601,7 @@ window.World = (function () {
     postS = new THREE.Scene(); postC = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1); postS.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), postM));
   }
 
-  /* ======================= 太阳、时间、天气 ======================= */
+  /* ======================= Sun, time and weather ======================= */
   function sunDir(tod = st.tod) {
     const ph = (((tod % 1) + 1) % 1 - .25) / .5 * Math.PI;
     return V3(.7 * Math.cos(ph) + .15 * Math.sin(ph), .9 * Math.sin(ph), .7 * Math.cos(ph) - .15 * Math.sin(ph)).normalize();
@@ -630,46 +630,46 @@ window.World = (function () {
     S.hemi.color.setHex(st.night > .5 ? (st.frost > .5 ? 0x7a9ac8 : 0x4a5a8a) : 0x9fd0cc);
     const v = vis, lamp = ss(.2, .7, st.night) * (v.powerOut ? .15 : 1);
     S.lampHub.intensity = lamp * 1.1; S.lampGh.intensity = (lamp * 1.2 + v.foodWork * .08) * (1 - v.blight * .5);
-    // 警报
+    // alarm
     const alert = v.o2 < 25 || v.food < 20 || v.powerOut;
     B.beacon.visible = alert && (t % .8) < .45; S.lampAlarm.intensity = alert ? (Math.sin(t * 8) > 0 ? 1.4 : 0) : 0;
     B.sign.visible = v.dosePct > .6; B.signFace.material.color.setHex(v.dosePct > .8 && (t % 1) < .5 ? P.red : P.mustard);
-    // 窗户：避难所 / 断电
+    // windows: shelter / power cut
     for (const w of B.windows) { let on = !v.powerOut || ((t * 7 + w.id) % 5) < .3; if (v.shelter && w.userData.grp !== 'shelter') on = false; w.material = on ? M.win : M.winOff; }
-    // 温室植物：病害发黄、缺粮枯萎、寒夜结霜
+    // greenhouse plants: yellow when sick, wilted without food, frosted on cold nights
     M.plant.color.copy(plantOk).lerp(plantSick, Math.min(1, v.blight)).lerp(plantDead, ss(30, 5, v.food)).lerp(plantFrost, st.frost * st.night);
     const keep = 1 - v.cull;
     for (const p of B.plants) { const show = p.userData.cull < keep; const s = p.userData.s * (.35 + v.growth * .9) * (show ? 1 : .001) * (1 - .3 * ss(30, 5, v.food)); p.scale.setScalar(Math.max(.001, s / p.userData.s)); p.position.y = s * .7; }
     M.glass.emissive.setRGB(0, .04 + v.foodWork * .025 * (1 - v.blight), .02);
-    // 屏蔽土堆：等级越高越厚
+    // shield mounds: thicker at higher levels
     B.mounds.forEach((m, i) => {
       const need = [1, 3, 4, 5][i], modOk = i < 2 || (i - 2) < v.labs;
       const want = v.shieldLv >= need && modOk ? .6 + (v.shieldLv - need) * .14 : 0;
       m.userData.cur += (want - m.userData.cur) * Math.min(1, dt * 1.2);
       const c = m.userData.cur; m.scale.set(5.4 * c, 2.7 * c, 2.7 * c); m.visible = c > .02; });
-    // 太阳能板：清洁度、沙尘、损坏
+    // solar panels: cleanliness, dust, damage
     M.panel.color.copy(panelClean).lerp(panelDirty, Math.min(1, Math.max(0, (1 - v.panelEff) * 2.2 + st.storm * .5)));
     anchors.solarDust=B.rows[0].userData.panels[3].getWorldPosition(V3()).add(V3(0,.5,0));
     anchors.solarConnector=B.solarPlug.getWorldPosition(V3()).add(V3(0,.5,0));
-    // 电池电量条
+    // battery level bar
     B.cells.forEach((c, i) => { c.visible = i < 8 || v.battBonus > 0; c.material = i < v.batt ? M.tealGlow : M.winOff; });
     if (v.battBonus > 0) { B.roverCable.visible = true; B.rover.position.set(11, H(11, 11), 11); B.rover.rotation.y = .8; B.roverCable.geometry.setFromPoints([V3(11, 1.2, 11), V3(10.5, 1, 9)]); }
     else { B.roverCable.visible = false;
       if (!B.rover.userData.mission) { const ra = t * .05, R = 36; B.rover.position.set(Math.cos(ra) * R, H(Math.cos(ra) * R, Math.sin(ra) * R), Math.sin(ra) * R); B.rover.rotation.y = -ra - Math.PI / 2; } }
-    // 制氧站：分到的电越多，蒸汽越勤；故障冒黑烟；抢修时火花四溅
+    // oxygen station: more power means more steam; black smoke when broken; sparks during repair
     steamT -= dt * (v.o2Fault === 1 ? 4 : .3 + v.o2Work * .35);
     if (steamT <= 0) { steamT = 1; const p = V3(4.9, 4.6, -16); if (v.o2Fault === 1) puff(p, { mat: 'dark', s0: .5, s1: 2.6, life: 3, vel: V3(.6, 2, .2) }); else if (v.o2Work > 0) puff(p, { mat: 'cream', s0: .3, s1: 1.4, life: 1.8 }); }
     if (v.o2Fault === 2 && Math.random() < dt * 25) spark(V3(4 + Math.random() * 2, 2 + Math.random(), -14.7), V3((Math.random() - .5) * 4, 2 + Math.random() * 3, 2), 0xffe08a, 2.5, .7);
     B.o2light.material = v.o2Fault === 1 ? M.red : (v.o2Work > 0 ? M.tealGlow : M.winOff);
     const tankC = v.o2 < 25 && (t % .8) < .4 ? M.red : M.tealGlow;
     B.tanks.forEach(tk => { tk.userData.band.material = tankC; tk.userData.band.scale.y = .4 + v.o2 / 100 * 3; tk.userData.band.position.y = .3 + v.o2 / 100 * 1.1; });
-    // 挖土机：屏蔽施工时来回运土
+    // digger: moves soil back and forth while the shield is built
     if (v.shieldWork > 0) exT += dt * (.4 + v.shieldWork * .08);
     const ep = (Math.sin(exT) + 1) / 2;
     B.ex.position.set(lerp(-11, -7, ep), H(-9, 13), lerp(14, 11, ep)); B.ex.rotation.y = -.6 + (Math.cos(exT) > 0 ? 0 : Math.PI);
     B.exArm.rotation.z = v.shieldWork > 0 ? Math.sin(exT * 3) * .35 - .1 : -.35;
     if (v.shieldWork > 0 && Math.random() < dt * (1 + v.shieldWork * .5)) puff(B.ex.position.clone().add(V3(0, .4, 0)), { mat: 'dust', s0: .3, s1: 1.2, life: 1.2 });
-    // 科学站：分到电就运转；日凌时天线失联
+    // science station: runs when it has power; antenna loses contact during conjunction
     B.vane.rotation.y += dt * (2 + v.sciWork * 2);
     B.dish.rotation.z = v.conj ? Math.sin(t * .3) * .4 : 0;
     B.antBeacon.visible = !v.conj && (t % 1.6) < .3;
@@ -687,15 +687,15 @@ window.World = (function () {
     B.astro.visible = !v.shelter && !B.crew[0].visible;
     markers.forEach(m => { m.ring.rotation.z += dt * .3; m.beacon.position.y = 3.6 + Math.sin(t * 2) * .25; });
     anchors.astro.set(B.astroPos.x, B.astro.position.y + 4.6, B.astroPos.z);
-    // 锻炼的队友绕着枢纽慢跑
+    // a crewmate jogs around the hub for exercise
     B.runner.visible = v.exercise && !v.shelter && st.night < .5 && !B.crew[0].visible;
     if (B.runner.visible) { const ra = t * .35; B.runner.position.set(Math.cos(ra) * 6.5, 0, Math.sin(ra) * 6.5); B.runner.rotation.y = -ra; walkPose(B.runner, t * 1.4, true); }
-    // 尘卷风
+    // dust devil
     if (v.devil > 0) { devilT += dt; B.devil.visible = true; const k = (devilT * .06) % 1; const x = lerp(40, -10, k), z = lerp(-22, 4, k); B.devil.position.set(x, H(x, z), z);
       B.devil.children.forEach((r, i) => { r.rotation.z += dt * (3 + i); r.position.x = Math.sin(t * 3 + i) * .25 * i; });
       if (Math.random() < dt * 30) spark(B.devil.position.clone().add(V3((Math.random() - .5) * 4, Math.random() * 10, (Math.random() - .5) * 4)), V3(Math.random() * 4 - 2, 2, Math.random() * 4 - 2), 0xe8b07a, 2, 1.2); }
     else B.devil.visible = false;
-    // 信号、尘埃
+    // signal, dust
     st.signal = Math.max(0, st.signal - dt);
     const sig = Math.min(1, st.signal * 2);
     S.line.material.opacity = sig * .75; S.pulses.material.opacity = sig;
@@ -707,7 +707,7 @@ window.World = (function () {
     postM.uniforms.alarm.value = st.alarm;
   }
 
-  /* ======================= 镜头 ======================= */
+  /* ======================= Camera ======================= */
   const POSES = {
     overview: t => { const a = 1.12 + .2 * Math.sin(t * .04), R = 60 - 3 * Math.sin(t * .05); return [V3(Math.cos(a) * R, 17 + 1.2 * Math.sin(t * .07), Math.sin(a) * R), V3(-2, 3.5, -3)]; },
     hub: t => [V3(14 + Math.sin(t * .1), 7, 18), V3(0, 3, 0)],
@@ -740,7 +740,7 @@ window.World = (function () {
     camera.position.copy(cam.pos); camera.lookAt(cam.tgt);
   }
 
-  /* ======================= 开场长镜头 ======================= */
+  /* ======================= Opening shot ======================= */
   const INTRO_T = [0, 8, 15, 23, 28];
   function introPose(t) {
     const E = SP.E, Mp = SP.M;
@@ -752,7 +752,7 @@ window.World = (function () {
     return [pos, V3().lerpVectors(E, Mp, ss(8, 17, t))];
   }
 
-  /* ======================= 结局动画 ======================= */
+  /* ======================= Ending scenes ======================= */
   function launchRocket(opts, cb) {
     const r = B.rocket, t0 = NOW, pad = B.pad.position.clone(), dur = opts.dur || 15000;
     let fired = false;
@@ -815,7 +815,7 @@ window.World = (function () {
     }
   }
 
-  /* ======================= 主循环 ======================= */
+  /* ======================= Main loop ======================= */
   let lastT = 0;
   function frame(now) {
     NOW = now; const t = now / 1000, dt = Math.min(.05, t - (lastT || t)); lastT = t;
@@ -860,7 +860,7 @@ window.World = (function () {
     for (const m of [SP.earth, SP.mars, SP.moon]) m.material.uniforms.px.value = pr;
   }
 
-  /* ======================= 对外接口 ======================= */
+  /* ======================= Public API ======================= */
   function buildPlayerSites() {
     B.base.updateMatrixWorld(true);
     blockers.length = cameraBlockers.length = 0;
@@ -936,7 +936,7 @@ window.World = (function () {
         return [V3().lerpVectors(from[0], ov[0], e), V3().lerpVectors(from[1], ov[1], e)]; };
       cam.override.hard = true;
     },
-    // 把游戏状态同步到画面；新出现的部件会“弹出”建成
+    // sync game state to the scene; new parts "pop" into place
     sync(state, initial) { Object.assign(vis, state); if (B.base) applyVis(initial); },
     ending,
     focus(name) { cam.focus = name || 'overview'; },
@@ -960,7 +960,7 @@ window.World = (function () {
     setAurora(x) { st.auroraT = x; },
     setFrost(x) { st.frost = x; },
     signal(sec) { st.signal = sec; },
-    // 一次性特效
+    // one-off effects
     fx(name) {
       if (name === 'repair') for (let i = 0; i < 40; i++) setTimeout(() => spark(V3(4 + Math.random() * 2, 2.5, -14.6), V3((Math.random() - .5) * 5, 3 + Math.random() * 3, 2), 0xffe08a, 3, .8), i * 40);
       if (name === 'clean') B.rows.filter(row=>row.visible).flatMap(row=>row.userData.panels).forEach((panel,i)=>setTimeout(()=>puff(panel.getWorldPosition(V3()).add(V3(0,.2,0)),{mat:'dust',s0:.12,s1:.5,life:.7,vel:V3(.6,.6,0)}),i*45));

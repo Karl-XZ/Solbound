@@ -1,24 +1,22 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>火星前哨 · 三十个火星日</title>
-<meta name="description" content="少年宇航员任务训练：在火星杰泽罗陨石坑经营一座前哨站，用真实的 NASA 数据体验氧气、电力、辐射屏蔽与食物之间的取舍。">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;600;800&family=ZCOOL+QingKe+HuangYou&display=swap" rel="stylesheet">
+<title>Solbound · 30 Sols on Mars</title>
+<meta name="description" content="A junior astronaut mission trainer: run an outpost in Jezero Crater on Mars and use real NASA data to feel the trade-offs between oxygen, power, radiation shielding and food.">
+<link rel="stylesheet" href="vendor/fonts.css">
 <script src="vendor/three.min.js"></script>
 <style>
 :root{
   --cream:#f4e7c8; --paper:#e9dcbd; --ink:#2b1a24; --mustard:#e6a83f; --orange:#d9692f; --rust:#b8452a; --brick:#8e2f22;
   --teal:#3f8f93; --tealL:#8cc7c3; --tealD:#2a5f68; --green:#7fae5b; --navy:#1f2c3f;
   --o2:#8cc7c3; --food:#7fae5b; --dose:#d9692f; --sci:#e6a83f; --batt:#f4e7c8; --shield:#d9692f;
-  --disp:"ZCOOL QingKe HuangYou","Noto Sans SC",sans-serif;
+  --disp:"Fredoka","Nunito",system-ui,sans-serif;
   --frame:clamp(6px,1.4vmin,16px);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;background:var(--paper);color:var(--ink);overflow:hidden;font-family:"Noto Sans SC",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+html,body{height:100%;background:var(--paper);color:var(--ink);overflow:hidden;font-family:"Nunito",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 button{font:inherit;color:inherit}
 #frame{position:fixed;inset:var(--frame);overflow:hidden;background:var(--ink);box-shadow:0 2px 0 rgba(0,0,0,.08),0 24px 50px -20px rgba(60,20,10,.5)}
 #stage{position:absolute;inset:0}
@@ -26,7 +24,7 @@ button{font:inherit;color:inherit}
 .grain{position:absolute;inset:0;pointer-events:none;mix-blend-mode:multiply;opacity:.18;z-index:1;
   background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .35  0 0 0 0 .22  0 0 0 0 .15  0 0 0 .55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
 
-/* ---------- 通用部件 ---------- */
+/* ---------- shared parts ---------- */
 .card{background:var(--cream);color:var(--ink);border:2px solid var(--ink);box-shadow:4px 4px 0 var(--ink)}
 .c-h{font-family:var(--disp);font-size:19px;letter-spacing:.12em;border-bottom:2px solid var(--ink);padding-bottom:4px;margin-bottom:8px;line-height:1.2}
 .btn{cursor:pointer;background:var(--cream);border:2px solid var(--ink);box-shadow:3px 3px 0 var(--ink);padding:9px 18px;font-weight:800;letter-spacing:.12em;transition:transform .12s,box-shadow .12s}
@@ -49,7 +47,7 @@ button{font:inherit;color:inherit}
 .mini{position:absolute;z-index:60;left:50%;top:18%;transform:translateX(-50%);background:var(--ink);color:var(--cream);padding:8px 16px;font-weight:600;letter-spacing:.1em;animation:fadeup 1.9s forwards;pointer-events:none}
 @keyframes fadeup{0%{opacity:0;transform:translate(-50%,8px)}12%,75%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
 
-/* ---------- 标题 ---------- */
+/* ---------- title ---------- */
 .screen{position:absolute;inset:0;z-index:20;opacity:0;visibility:hidden;transition:opacity 1s,visibility 0s 1s}
 .screen.on{opacity:1;visibility:visible;transition:opacity 1s}
 #title{display:flex;flex-direction:column;justify-content:center;padding:0 7vw;color:var(--cream);pointer-events:none}
@@ -65,7 +63,7 @@ button{font:inherit;color:inherit}
 #title .t-foot{position:absolute;left:7vw;bottom:5vh;font-size:12px;letter-spacing:.15em;opacity:.85}
 #title .t-foot .link{color:var(--cream)}
 
-/* ---------- 字幕 ---------- */
+/* ---------- captions ---------- */
 #cap{position:absolute;z-index:15;left:0;right:0;bottom:15%;text-align:center;color:var(--cream);font-size:clamp(16px,1.9vw,24px);line-height:1.9;letter-spacing:.14em;font-weight:600;
   text-shadow:2px 2px 0 var(--ink);opacity:0;transform:translateY(10px);transition:opacity 1.2s,transform 1.2s;pointer-events:none;padding:0 6vw}
 #cap.on{opacity:1;transform:none}
@@ -102,7 +100,7 @@ button{font:inherit;color:inherit}
 .m-row .v{font-style:normal;font-weight:800;font-size:15px;text-align:right;font-variant-numeric:tabular-nums}
 .m-row .v small{font-size:10px;opacity:.6;font-weight:600}
 .m-row .d{grid-column:2/4;font-size:11px;font-weight:800;letter-spacing:.05em;text-align:right;margin-top:1px;font-variant-numeric:tabular-nums}
-.m-row .d::before{content:"今晚过后 ";font-weight:600;opacity:.55}
+.m-row .d::before{content:"After tonight ";font-weight:600;opacity:.55}
 .d.good{color:#3f7a2e}.d.bad{color:#b0321c}.d.meh{color:#6b5a50}
 .m-row.warn .m-l{color:#b0321c;animation:blink 1.2s infinite}
 @keyframes blink{50%{opacity:.55}}
@@ -154,7 +152,7 @@ button{font:inherit;color:inherit}
 #bGo{font-size:16px}#bGo span{font-size:12px;margin-left:4px}
 .coach-hi{position:relative;z-index:5;outline:3px dashed var(--mustard);outline-offset:4px}
 
-/* 夜晚过场 */
+/* night transition */
 #frame.nightfall #power,#frame.nightfall #fore{opacity:.25}
 #floaters{position:absolute;inset:0;z-index:12;pointer-events:none}
 .floater{position:absolute;transform:translate(-50%,-100%);font-family:var(--disp);font-size:24px;color:var(--cream);text-shadow:2px 2px 0 var(--ink),-1px -1px 0 var(--ink);animation:float 2.6s forwards;white-space:nowrap}
@@ -169,7 +167,7 @@ button{font:inherit;color:inherit}
 #toast li::before{content:"";position:absolute;left:0;top:.62em;width:8px;height:8px;background:var(--rust)}
 .tt-f{text-align:right;font-size:11px;opacity:.55;letter-spacing:.2em;margin-top:6px}
 
-/* ---------- 事件卡 ---------- */
+/* ---------- event card ---------- */
 .modal{position:absolute;inset:0;z-index:40;background:rgba(43,26,36,.45);display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;visibility:hidden;transition:opacity .4s,visibility 0s .4s}
 .modal.on{opacity:1;visibility:visible;transition:opacity .4s}
 .mcard{background:var(--cream);border:2px solid var(--ink);box-shadow:8px 8px 0 var(--ink);width:min(620px,100%);max-height:100%;overflow:auto;padding:0 24px 22px;transform:translateY(16px) rotate(-.4deg);transition:transform .5s cubic-bezier(.2,1.4,.4,1)}
@@ -212,20 +210,20 @@ button{font:inherit;color:inherit}
 .bdg.got{opacity:1;border:2px solid var(--ink);background:var(--c);box-shadow:3px 3px 0 var(--ink);color:var(--ink)}
 .rp-build{font-size:13px;font-weight:600;letter-spacing:.04em;background:#fbf2dc;border:2px solid var(--ink);padding:6px 12px;margin-bottom:6px}
 
-/* 信号演示 */
+/* signal demo */
 .sigdemo{position:absolute;z-index:35;left:50%;top:16px;transform:translateX(-50%);background:var(--ink);color:var(--cream);padding:10px 16px;width:min(380px,calc(100% - 32px));border:2px solid var(--cream)}
 .sd-h{font-weight:800;letter-spacing:.2em;font-size:13px}
 .sd-bar{height:8px;border:1.5px solid var(--cream);margin:7px 0 5px}.sd-bar s{display:block;height:100%;background:var(--mustard)}
 .sd-n{font-size:11px;opacity:.75;letter-spacing:.06em}
 
-/* 新手引导 */
+/* first-day guide */
 #coach{position:absolute;z-index:45;background:var(--ink);color:var(--cream);padding:12px 16px;box-shadow:4px 4px 0 var(--mustard);opacity:0;visibility:hidden;transition:opacity .3s,top .4s,left .4s}
 #coach.on{opacity:1;visibility:visible}
 .co-n{font-size:11px;letter-spacing:.3em;color:var(--mustard);font-weight:800}
 .co-t{font-size:14px;line-height:1.75;margin:4px 0 10px}.co-t b{color:var(--mustard)}
 .co-b{display:flex;justify-content:space-between;align-items:center}.co-b .link{color:var(--cream);font-size:12px}.co-b .btn{padding:5px 14px;color:var(--ink)}
 
-/* ---------- 报告 ---------- */
+/* ---------- report ---------- */
 #report{z-index:50;overflow:auto;background:rgba(43,26,36,.35);display:flex;justify-content:center;align-items:flex-start;padding:4vh 16px}
 .rp{background:var(--cream);border:2px solid var(--ink);box-shadow:8px 8px 0 var(--ink);width:min(980px,100%);padding:26px 30px 28px;margin:auto 0}
 .rp-k{font-weight:800;font-size:12px;letter-spacing:.5em;color:var(--rust)}
@@ -248,7 +246,7 @@ button{font:inherit;color:inherit}
 .rp-end{margin:22px 0 4px;font-family:var(--disp);font-size:clamp(20px,2.6vmin,28px);letter-spacing:.1em;text-align:center}
 .rp-btns{display:flex;gap:12px;justify-content:center;margin-top:14px}
 
-/* ---------- 数据来源 ---------- */
+/* ---------- data sources ---------- */
 #sources{z-index:60}
 #srcCard{width:min(860px,100%);padding:24px 26px;position:relative}
 #srcCard h2{margin:4px 0 10px}
@@ -263,7 +261,7 @@ button{font:inherit;color:inherit}
 .simp li{font-size:13px;line-height:1.75;margin:4px 0 4px 18px}
 .teach{font-size:13.5px;line-height:1.85}
 
-/* ---------- 窄屏 ---------- */
+/* ---------- narrow screens ---------- */
 @media (max-width:900px){
   #fore{display:none}
   #meters{width:230px;top:112px}
@@ -294,73 +292,73 @@ button{font:inherit;color:inherit}
   <div class="grain"></div>
   <div id="entry"></div>
   <div id="cap"></div>
-  <button id="skip" class="btn">跳过开场 ›</button>
+  <button id="skip" class="btn">Skip intro ›</button>
 
   <section id="title" class="screen">
-    <div class="t-kicker">少年宇航员 · 任务训练</div>
-    <h1>火星前哨</h1>
-    <div class="t-sub">在杰泽罗陨石坑度过 30 个火星日<br>分配电力。保障生活。探索火星。</div>
-    <div class="t-row"><button class="btn big go" id="bStart">开始任务</button><button class="btn" id="bQuick">跳过开场</button></div>
+    <div class="t-kicker">Junior Astronaut · Mission Trainer</div>
+    <h1>SOLBOUND</h1>
+    <div class="t-sub">Live 30 sols in Jezero Crater on Mars<br>Share the power. Keep the crew alive. Explore Mars.</div>
+    <div class="t-row"><button class="btn big go" id="bStart">Start Mission</button><button class="btn" id="bQuick">Skip Intro</button></div>
     <div class="t-live" id="tLive"></div>
-    <div class="t-foot"><button class="link" id="bSrc0">数据来源与说明</button> · 适合 7–12 岁 · 第一天可跟着学 · 无需下载和注册</div>
+    <div class="t-foot"><button class="link" id="bSrc0">Data Sources & Notes</button> · Ages 7–12 · Guided first day · No download, no sign-up</div>
   </section>
 
   <section id="hud">
-    <section id="stationStatus" aria-label="前哨站状态"><div id="meters" class="card" aria-label="前哨站资源"></div></section>
-    <header class="cabin-header"><div><span class="cabin-kicker"><i></i> JEZERO · HABITAT 01</span><h1>火星基地</h1><p id="cabinGreeting">请检查物资和电力。</p></div><div class="scene-switch" role="group" aria-label="基地与舱外"><button id="viewInterior" aria-pressed="true">基地生活</button><button id="viewOverview" aria-pressed="false">3D 基地全景</button><button id="viewExterior" aria-pressed="false">出舱探索</button></div></header>
+    <section id="stationStatus" aria-label="Outpost Status"><div id="meters" class="card" aria-label="Outpost resources"></div></section>
+    <header class="cabin-header"><div><span class="cabin-kicker"><i></i> JEZERO · HABITAT 01</span><h1>Mars Base</h1><p id="cabinGreeting">Check your supplies and power.</p></div><div class="scene-switch" role="group" aria-label="Base and outside"><button id="viewInterior" aria-pressed="true">Habitat</button><button id="viewOverview" aria-pressed="false">3D Base View</button><button id="viewExterior" aria-pressed="false">Go Outside</button></div></header>
     <div class="field-mark"><span class="status-light"></span> JEZERO OUTPOST <span>18.4° N / 77.5° E</span></div>
-    <nav class="notebook-shelf" aria-label="选择笔记本">
+    <nav class="notebook-shelf" aria-label="Choose a notebook">
       <button id="archiveBook" class="shelf-book archive-cover" aria-expanded="false" aria-controls="notebook">
         <span class="shelf-count" id="archiveCount">0</span>
         <svg viewBox="0 0 36 42" fill="none" aria-hidden="true"><path d="M9 4h21v33H9a4 4 0 0 1-4-4V8a4 4 0 0 1 4-4Z"/><path d="M10 4v33M15 13h10M15 18h10M15 23h6M5 32h25"/></svg>
-        <b>事件档案</b><small>ARCHIVE</small>
+        <b>Event Archive</b><small>ARCHIVE</small>
       </button>
       <button id="todayBook" class="shelf-book today-cover active" aria-expanded="true" aria-controls="notebook">
         <span class="shelf-signal" id="todaySignal"></span>
         <svg viewBox="0 0 36 42" fill="none" aria-hidden="true"><path d="M9 4h21v33H9a4 4 0 0 1-4-4V8a4 4 0 0 1 4-4Z"/><path d="M10 4v33M17 18l3 3 6-7M15 28h10M5 32h25"/></svg>
-        <b>今日手册</b><small id="dockSol">SOL 01</small>
+        <b>Today’s Log</b><small id="dockSol">SOL 01</small>
       </button>
     </nav>
-    <footer id="cabinDashboard" aria-label="生活舱物资与电量">
-      <div id="survivalHUD" class="survival-bar" role="group" aria-label="基地资源">
-        <button data-item="food" aria-label="查看食物"><span>食物<b id="cabinFood">50</b></span></button>
-        <button data-item="water" aria-label="查看饮用水"><span>饮水<b id="cabinWater">70</b></span></button>
-        <button data-item="medicine" aria-label="查看药品"><span>药品<b id="cabinMeds">4</b></span></button>
-        <button data-item="crew" aria-label="查看宇航员心情"><span>心情<b id="cabinMorale">75</b></span></button>
-        <button data-item="calendar" aria-label="查看任务日历"><span>火星日<b id="cabinDay">01<small> / 30</small></b></span></button>
+    <footer id="cabinDashboard" aria-label="Habitat supplies and power">
+      <div id="survivalHUD" class="survival-bar" role="group" aria-label="Base resources">
+        <button data-item="food" aria-label="View food"><span>Food <b id="cabinFood">50</b></span></button>
+        <button data-item="water" aria-label="View drinking water"><span>Water <b id="cabinWater">70</b></span></button>
+        <button data-item="medicine" aria-label="View medicine"><span>Medicine <b id="cabinMeds">4</b></span></button>
+        <button data-item="crew" aria-label="View the astronaut’s mood"><span>Mood <b id="cabinMorale">75</b></span></button>
+        <button data-item="calendar" aria-label="View the mission calendar"><span>Sol <b id="cabinDay">01<small> / 30</small></b></span></button>
       </div>
       <div id="cabinPowerMount"></div>
     </footer>
-    <span class="room-hint" id="roomHint">点击物品进行操作。</span>
-    <section id="baseConsole" aria-label="基地控制台" hidden>
-      <div id="solCard" class="card"><div class="sol-k">火星日<button class="q" data-tip="sol">?</button></div><div class="sol-n"><b id="solN">01</b><span> / 30</span></div><div class="sol-bar"><s id="solBar"></s></div></div>
+    <span class="room-hint" id="roomHint">Click an object to use it.</span>
+    <section id="baseConsole" aria-label="Base Console" hidden>
+      <div id="solCard" class="card"><div class="sol-k">Sol<button class="q" data-tip="sol">?</button></div><div class="sol-n"><b id="solN">01</b><span> / 30</span></div><div class="sol-bar"><s id="solBar"></s></div></div>
       <div id="careMeters" hidden></div>
       <div id="fore" class="card"></div>
       <div id="power" class="card"></div>
-      <div id="topbtns"><button class="pill" id="consoleReturn">返回生活舱</button><button class="pill" id="bComm">地球</button><button class="pill" id="bSrc">数据来源</button><button class="pill" id="bSnd">声音</button></div>
+      <div id="topbtns"><button class="pill" id="consoleReturn">Back to Habitat</button><button class="pill" id="bComm">Earth</button><button class="pill" id="bSrc">Data Sources</button><button class="pill" id="bSnd">Sound</button></div>
     </section>
-    <div id="notebook" class="notebook" data-book="today" role="region" aria-label="今日手册">
+    <div id="notebook" class="notebook" data-book="today" role="region" aria-label="Today’s Log">
       <header class="book-shell">
-        <span class="book-brand"><span class="brand-mark"></span> ARES <span id="bookName">今日手册</span></span>
-        <button id="closeBook" class="shell-button" aria-label="关闭手册">收起 <span>↗</span></button>
+        <span class="book-brand"><span class="brand-mark"></span> ARES <span id="bookName">Today’s Log</span></span>
+        <button id="closeBook" class="shell-button" aria-label="Close the log">Close <span>↗</span></button>
       </header>
       <div class="book-leaves">
         <div class="book-binding" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-        <div class="book-running-head"><span id="chapterName">今日简报</span><span>SOL <b id="journalDay">01</b> / 30</span></div>
+        <div class="book-running-head"><span id="chapterName">Today’s Briefing</span><span>SOL <b id="journalDay">01</b> / 30</span></div>
         <div class="book-pages">
-          <section id="briefPage" class="book-page" data-book="today" data-sheet="brief" data-label="今日简报" aria-label="今日简报">
-            <div class="entry-label">今日任务记录</div>
+          <section id="briefPage" class="book-page" data-book="today" data-sheet="brief" data-label="Today’s Briefing" aria-label="Today’s Briefing">
+            <div class="entry-label">Today’s mission record</div>
             <div id="journalEvent" aria-live="polite"></div>
           </section>
-          <section class="book-page" data-book="today" data-sheet="decision" data-label="今日决定" aria-label="今日决定" hidden><div id="journalChoices"></div></section>
-          <section class="book-page" data-book="today" data-sheet="weather" data-label="环境观测" aria-label="环境观测" hidden>
-            <div class="page-eyebrow">SURFACE TELEMETRY</div><h2>基地位置</h2><p class="page-subtitle">天气和资源显示在基地控制台。</p><div id="journalMap"></div>
+          <section class="book-page" data-book="today" data-sheet="decision" data-label="Today’s Decision" aria-label="Today’s Decision" hidden><div id="journalChoices"></div></section>
+          <section class="book-page" data-book="today" data-sheet="weather" data-label="Weather Watch" aria-label="Weather Watch" hidden>
+            <div class="page-eyebrow">SURFACE TELEMETRY</div><h2>Base Location</h2><p class="page-subtitle">Weather and resources are shown on the Base Console.</p><div id="journalMap"></div>
           </section>
           <div id="journalHistory"></div>
         </div>
-        <footer class="book-pagination"><button id="previousPage" aria-label="上一页">← <span>上一页</span></button><div class="page-position"><span id="pageNumber">01 / 04</span><div id="pageTrack"></div></div><button id="nextPage" aria-label="下一页"><span>下一页</span> →</button></footer>
+        <footer class="book-pagination"><button id="previousPage" aria-label="Previous page">← <span>Previous page</span></button><div class="page-position"><span id="pageNumber">01 / 04</span><div id="pageTrack"></div></div><button id="nextPage" aria-label="Next page"><span>Next page</span> →</button></footer>
       </div>
-      <footer class="book-shell book-bottom"><span><i class="status-light"></i> JEZERO / 本地终端</span><span>每日事件与任务记录</span></footer>
+      <footer class="book-shell book-bottom"><span><i class="status-light"></i> JEZERO / Local Terminal</span><span>Daily events and mission records</span></footer>
     </div>
   </section>
 
@@ -372,6 +370,7 @@ button{font:inherit;color:inherit}
   <section id="report" class="screen"></section>
   <div id="sources" class="modal"><div class="mcard" id="srcCard"></div></div>
 </div>
+<script src="data/donki-snapshot.js"></script>
 <script src="js/data.js"></script>
 <script src="js/audio.js"></script>
 <script src="vendor/d3-array.min.js"></script>

@@ -1,6 +1,6 @@
 /* =====================================================================
-   声音：全部用 Web Audio 实时合成，没有任何音频文件
-   风声（滤波噪声）+ 低频持续音 + 界面提示音
+   Sound: everything is synthesized live with Web Audio. There are no audio files.
+   Wind (filtered noise) + low drone + interface beeps
    ===================================================================== */
 window.Sound = (function () {
   let ctx, master, wind, windF, drone = [], on = true;
@@ -10,7 +10,7 @@ window.Sound = (function () {
     if (ctx) return;
     ctx = new (window.AudioContext || window.webkitAudioContext)();
     master = ctx.createGain(); master.gain.value = on ? .7 : 0; master.connect(ctx.destination);
-    // 风
+    // wind
     const len = ctx.sampleRate * 4, buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
     let b = 0; for (let i = 0; i < len; i++) { b = .985 * b + .015 * (Math.random() * 2 - 1); d[i] = b * 6; }
     wind = ctx.createBufferSource(); wind.buffer = buf; wind.loop = true;
@@ -18,7 +18,7 @@ window.Sound = (function () {
     const wg = ctx.createGain(); wg.gain.value = .22;
     wind.connect(windF).connect(wg).connect(master); wind.start();
     const lfo = ctx.createOscillator(), lg = ctx.createGain(); lfo.frequency.value = .07; lg.gain.value = 220; lfo.connect(lg).connect(windF.frequency); lfo.start();
-    // 持续音：五度叠置
+    // drone: stacked fifths
     for (const [f, g] of [[55, .05], [82.4, .03], [110.3, .018]]) {
       const o = ctx.createOscillator(), gg = ctx.createGain(); o.type = 'sine'; o.frequency.value = f; gg.gain.value = g;
       const tr = ctx.createOscillator(), tg = ctx.createGain(); tr.frequency.value = .05 + Math.random() * .05; tg.gain.value = g * .6; tr.connect(tg).connect(gg.gain); tr.start();

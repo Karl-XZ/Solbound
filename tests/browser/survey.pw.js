@@ -1,8 +1,8 @@
 async page => {
   await page.route('**/*',route=>route.continue());await page.reload();
   await page.evaluate(()=>{World.setMode('surface');document.querySelector('#title').classList.remove('on');World.reset();__dbg.newGame();__dbg.startGame();});
-  await page.getByRole('button',{name:'跳过教程'}).click();
-  await page.locator('#viewExterior').click();await page.getByRole('button',{name:'出舱',exact:true}).click();
+  await page.getByRole('button',{name:'Skip Tutorial'}).click();
+  await page.locator('#viewExterior').click();await page.getByRole('button',{name:'Go Out',exact:true}).click();
   async function walkTo(x,z) {
     let stuck=0,last=null;
     for(let i=0;i<100;i++) {

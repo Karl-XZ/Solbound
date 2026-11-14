@@ -1,13 +1,13 @@
 async page => {
   await page.route('**/*', route => route.continue());await page.reload();
   await page.evaluate(()=>{World.setMode('surface');document.querySelector('#title').classList.remove('on');World.reset();__dbg.newGame();__dbg.startGame();});
-  await page.getByRole('button',{name:'跳过教程'}).click();
+  await page.getByRole('button',{name:'Skip Tutorial'}).click();
   await page.evaluate(()=>{
     const g=__dbg.G();g.panelEff=1;g.damaged=0;g.stormLen=4;
     g.events={2:'stormWarn',3:'stormStart',7:'dustDevil',8:'o2fault',12:'delta',13:'conjunction',17:'cold',19:'blight',20:'resupply',21:'bones',22:'letter',23:'build',24:'quake',25:'dirty',26:'flare'};
     g.flareSols=[26];__dbg.beginSol();
   });
-  await page.getByRole('button',{name:'跳过教程'}).click();
+  await page.getByRole('button',{name:'Skip Tutorial'}).click();
   const visited=[],trace=[];
   for(let i=0;i<30;i++){
     const day=await page.evaluate(()=>__dbg.G().sol);
@@ -23,14 +23,14 @@ async page => {
     const trip=await page.evaluate(()=>{const g=__dbg.G();return g.storm===0&&g.evaLock===0&&!g.today.sciLock&&g.o2>28&&((g.panelEff<.9||g.damaged>0||g.o2Fault>0)||g.sci<g.sol*3.5);});
     if(trip){
       await page.evaluate(()=>Expedition.requestDeparture());
-      await page.getByRole('button',{name:'出舱',exact:true}).click();
+      await page.getByRole('button',{name:'Go Out',exact:true}).click();
       await page.evaluate(()=>{const g=__dbg.G(),m=Expedition.model;for(const t of [...m.tasks])if(t.phase!=='done'&&ExpeditionModel.canAfford(g,t.cost)&&(t.kind==='repair'||(t.kind==='clean'&&g.panelEff<.9)||t.kind==='survey')){m.start(t.id);m.finish(t.id);}});
       await page.waitForFunction(()=>!document.querySelector('#nearbyAction').disabled);
       await page.locator('#nearbyAction').click();
     }
     const water=await page.evaluate(()=>({water:__dbg.G().water,batt:__dbg.G().batt}));
     if(water.water<30&&water.batt>=2){
-      await page.getByRole('button',{name:'净水机：消耗电池净化饮用水'}).click();await page.getByRole('button',{name:/启动净水/}).click();if(await page.locator('#itemPopover').isVisible())await page.locator('.item-close').click();
+      await page.getByRole('button',{name:'Water recycler: use battery power to clean drinking water'}).click();await page.getByRole('button',{name:/Start Cleaning Water/}).click();if(await page.locator('#itemPopover').isVisible())await page.locator('.item-close').click();
     }
     await page.evaluate(()=>{const g=__dbg.G();g.want={o2:Math.ceil((7+g.exercise+(g.o2<45?2:0))/(g.o2Rate*g.o2Mul)),food:g.food<40?3:2,shield:g.shieldLv<3&&g.storm===0&&g.batt>=4?1:0,sci:g.storm>0||g.batt<4?0:2};__dbg.renderAll();});
     trace.push(await page.evaluate(()=>({sol:__dbg.G().sol,o2:__dbg.G().o2,food:__dbg.G().food,water:__dbg.G().water,pool:__dbg.G().pool,alloc:__dbg.G().alloc})));

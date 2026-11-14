@@ -13,7 +13,7 @@
 #frame.interior-view #stationStatus .m-shield .lv i{width:9px;height:9px;border-width:1px}
 #frame.interior-view #stationStatus .m-shield .q{display:none}
 #frame.interior-view #hud .notebook-shelf{flex-direction:row;left:18px;top:86px;gap:10px}
-#frame.interior-view #hud .notebook-shelf .shelf-book{height:30px;width:78px;min-height:30px;padding:3px;box-shadow:2px 2px 0 var(--ink)}
+#frame.interior-view #hud .notebook-shelf .shelf-book{height:30px;width:auto;min-height:30px;padding:3px 10px;white-space:nowrap;box-shadow:2px 2px 0 var(--ink)}
 #frame.interior-view #hud .shelf-book svg,#frame.interior-view #hud .shelf-book small,#frame.interior-view #hud .shelf-count,#frame.interior-view #hud .shelf-signal{display:none}
 #fieldStats{display:none!important}
 #frame:not(.interior-view):not(.console-open) .mission-card{left:auto;right:28px}

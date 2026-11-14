@@ -1,8 +1,8 @@
 {
-  "name": "mars-eva-cabin-3d",
-  "version": "1.1.0",
+  "name": "solbound",
+  "version": "2.0.0",
   "private": true,
-  "description": "火星前哨 · 舱内 3D 版：生活舱改为实时 3D 场景，与舱外使用同一套卡通着色、墨线描边与网点后期。",
+  "description": "Solbound: a junior astronaut mission trainer. Run a Mars outpost for 30 sols and learn real engineering trade-offs with NASA data.",
   "license": "UNLICENSED",
   "engines": {
     "node": ">=18"
@@ -10,7 +10,7 @@
   "scripts": {
     "start": "node tools/serve.cjs 8765",
     "test": "npm run test:logic && npm run test:browser",
-    "test:logic": "node --test tests/expedition.test.cjs tests/server.test.cjs",
+    "test:logic": "node --test tests/expedition.test.cjs tests/server.test.cjs tests/english.test.cjs",
     "test:browser": "node tests/run-tests.cjs",
     "browsers": "playwright install chromium"
   },

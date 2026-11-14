@@ -8,14 +8,14 @@
 .habitat-object{cursor:pointer;outline:none}.object-art{transform-box:fill-box;transform-origin:center bottom;transition:filter .2s,transform .2s}
 .habitat-object:hover>.object-art,.habitat-object:focus-visible>.object-art{filter:drop-shadow(0 0 8px #fff2a5) drop-shadow(0 0 2px #f4e1a3);transform:translateY(-3px)}
 .habitat-object:focus-visible .object-caption rect{stroke:#587e78;stroke-width:3}
-.object-caption rect{fill:#fff7df;stroke:#bdba9c;stroke-width:1;opacity:.9}.object-caption text{text-anchor:middle;font:11px "Noto Sans SC",system-ui,sans-serif;fill:#828d73;font-weight:500;letter-spacing:1px}
+.object-caption rect{fill:#fff7df;stroke:#bdba9c;stroke-width:1;opacity:.9}.object-caption text{text-anchor:middle;font:11px "Nunito",system-ui,sans-serif;fill:#828d73;font-weight:500;letter-spacing:1px}
 .face-sad,.face-weak{display:none}[data-mood=sad] .face-happy,[data-mood=weak] .face-happy{display:none}[data-mood=sad] .face-sad,[data-mood=weak] .face-weak{display:block}
 .crew-body{animation:cabin-breathe 3.4s ease-in-out infinite}[data-mood=sad] .crew-body{animation-duration:5s}[data-mood=weak] .crew-body{animation:none;transform:rotate(-4deg)}
 .radio-light{animation:radio-pulse 2.5s infinite}.water-drop{animation:drip 3.5s ease-in infinite}
 @keyframes cabin-breathe{50%{transform:translateY(-3px)}}@keyframes radio-pulse{50%{fill:#e8f2bc;filter:drop-shadow(0 0 4px #f1e8ac)}}@keyframes drip{0%,65%{opacity:0;transform:translateY(-4px)}80%{opacity:1}100%{opacity:0;transform:translateY(10px)}}
 .cabin-header{position:absolute;top:25px;left:136px;right:28px;display:flex;justify-content:space-between;align-items:flex-start;gap:20px;color:#5d7164;z-index:1;pointer-events:none!important}
 .cabin-header>div{pointer-events:auto}.cabin-kicker{font:9px var(--j-mono);letter-spacing:.17em;color:#88947b;display:flex;align-items:center;gap:7px}.cabin-kicker i{width:5px;height:5px;border-radius:50%;background:#83ab90;box-shadow:0 0 0 3px #83ab901a}
-.cabin-header h1{font:500 clamp(17px,1.7vw,24px)/1.5 "Noto Sans SC",sans-serif;letter-spacing:.04em;margin:9px 0 4px}.cabin-header p{font-size:10px;letter-spacing:.05em;color:#9aa189}
+.cabin-header h1{font:500 clamp(17px,1.7vw,24px)/1.5 "Nunito",sans-serif;letter-spacing:.04em;margin:9px 0 4px}.cabin-header p{font-size:10px;letter-spacing:.05em;color:#9aa189}
 .scene-switch{display:flex;align-items:center;gap:3px;padding:4px;background:#fff4ddad;border:1px solid #b9ba9b7a;border-radius:10px;box-shadow:0 2px 5px #a18c6a0c;backdrop-filter:blur(12px)}
 .scene-switch button{background:none;border:0;border-radius:7px;padding:10px 12px;cursor:pointer;color:#9a9f83;font-size:11px;white-space:nowrap;transition:background .15s,color .15s}.scene-switch small{font:8px var(--j-mono);margin-left:5px;opacity:.55}.scene-switch button[aria-pressed=true]{background:#648b79;color:#fff3da;box-shadow:0 2px 4px #416d481a}.scene-switch button:hover:not([aria-pressed=true]){background:#dfe6c8}
 .survival-bar{position:absolute;bottom:27px;left:calc(50% - 65px);transform:translateX(-50%);width:min(680px,calc(100% - 370px));display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;align-items:center;background:#fff5deee;border:1px solid #b9bda1;border-radius:17px;padding:13px 8px;box-shadow:0 5px 0 #9b9e7d1a,0 12px 26px #7f6e5421;backdrop-filter:blur(15px);z-index:2}
