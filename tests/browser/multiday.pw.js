@@ -30,7 +30,7 @@ async page => {
     }
     const water=await page.evaluate(()=>({water:__dbg.G().water,batt:__dbg.G().batt}));
     if(water.water<30&&water.batt>=2){
-      await page.getByRole('button',{name:'净水机：消耗电池净化饮用水'}).click();await page.getByRole('button',{name:/启动净水/}).click();await page.locator('.item-close').click();
+      await page.getByRole('button',{name:'净水机：消耗电池净化饮用水'}).click();await page.getByRole('button',{name:/启动净水/}).click();if(await page.locator('#itemPopover').isVisible())await page.locator('.item-close').click();
     }
     await page.evaluate(()=>{const g=__dbg.G();g.want={o2:Math.ceil((7+g.exercise+(g.o2<45?2:0))/(g.o2Rate*g.o2Mul)),food:g.food<40?3:2,shield:g.shieldLv<3&&g.storm===0&&g.batt>=4?1:0,sci:g.storm>0||g.batt<4?0:2};__dbg.renderAll();});
     trace.push(await page.evaluate(()=>({sol:__dbg.G().sol,o2:__dbg.G().o2,food:__dbg.G().food,water:__dbg.G().water,pool:__dbg.G().pool,alloc:__dbg.G().alloc})));

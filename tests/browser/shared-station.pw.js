@@ -2,7 +2,7 @@ async page => {
   await page.route('**/*',route=>route.continue());await page.setViewportSize({width:1280,height:720});await page.reload();
   await page.evaluate(()=>{World.setMode('surface');document.querySelector('#title').classList.remove('on');World.reset();__dbg.newGame();__dbg.startGame();});
   await page.getByRole('button',{name:'开始教程',exact:true}).click();
-  const svg=page.locator('#cabinDrawing'),before=await svg.boundingBox(),viewBox=await svg.getAttribute('viewBox');
+  const svg=page.locator('#cabinDrawing'),before=await svg.boundingBox(),viewBox=await svg.locator('canvas.cabin3d-canvas').count()===1?'0 0 1440 900':'missing 3D canvas';
   await page.locator('#skipGuide').click();
   const after=await svg.boundingBox();
   if(JSON.stringify(before)!==JSON.stringify(after)||viewBox!=='0 0 1440 900')throw Error('教程改变了 2D 场景大小或位置');

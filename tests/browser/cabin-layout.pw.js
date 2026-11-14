@@ -1,7 +1,7 @@
 async page => {
   await page.route('**/*',route=>route.continue());
   const results=[];
-  for(const size of [{width:2032,height:1024},{width:1280,height:720},{width:390,height:844}]){
+  for(const size of [{width:2032,height:1024},{width:1280,height:720},{width:844,height:390},{width:390,height:844}]){
     await page.setViewportSize(size);await page.reload();
     await page.evaluate(()=>{World.setMode('surface');document.querySelector('#title').classList.remove('on');World.reset();__dbg.newGame();__dbg.startGame();});
     await page.getByRole('button',{name:'跳过教程',exact:true}).click();
@@ -12,9 +12,10 @@ async page => {
     const room=await page.locator('#habitatScene').boundingBox(),frame=await page.locator('#frame').evaluate(el=>({width:el.clientWidth,height:el.clientHeight}));
     if(Math.abs(room.width-frame.width)>1||Math.abs(room.height-frame.height)>1)throw Error('2D 场景没有铺满原有区域');
     if(await page.locator('.mission-card').isVisible())throw Error('舱外任务仍然遮住生活舱');
+    await page.screenshot({path:`output/playwright/cabin-check-${size.width}x${size.height}.png`});
     if(size.width>700){
-      await page.waitForFunction(()=>[...document.querySelectorAll('#cabinDrawing .habitat-object')].every(el=>{const r=el.querySelector('.object-caption rect').getBoundingClientRect();return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.closest('[data-object]')===el;}),null,{timeout:5000});
-      const blocked=await page.locator('#cabinDrawing').evaluate(svg=>[...svg.querySelectorAll('.habitat-object')].filter(el=>{const label=el.querySelector('.object-caption rect'),r=label.getBoundingClientRect();return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.closest('[data-object]')!==el;}).map(el=>el.dataset.object));
+      await page.waitForFunction(()=>[...document.querySelectorAll('#cabinDrawing .habitat-object')].every(el=>{const r=el.querySelector('.object-caption').getBoundingClientRect();return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.closest('[data-object]')===el;}),null,{timeout:5000});
+      const blocked=await page.locator('#cabinDrawing').evaluate(svg=>[...svg.querySelectorAll('.habitat-object')].filter(el=>{const label=el.querySelector('.object-caption'),r=label.getBoundingClientRect();return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.closest('[data-object]')!==el;}).map(el=>el.dataset.object));
       if(blocked.length)throw Error('物品标签被挡住 '+JSON.stringify(blocked));
     }
     const emoji=await page.evaluate(()=>{const nodes=[...document.querySelectorAll('#hud *,#expeditionUI *')].filter(el=>el.children.length===0 && el.getClientRects().length && getComputedStyle(el).visibility!=='hidden');return nodes.map(el=>el.textContent).filter(s=>/\p{Extended_Pictographic}/u.test(s));});

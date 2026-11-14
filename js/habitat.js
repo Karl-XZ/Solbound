@@ -1,151 +1,25 @@
-/* The living quarters are vector artwork: every hotspot is the actual drawn object. */
+/* Living quarters use a 3D scene with accessible DOM hotspots. */
 window.Habitat = (() => {
   const $ = s => document.querySelector(s);
   let anchor, toastTimer, handlers;
-  const artwork = `<div class="room-scroll" aria-label="火星生活舱。左右滑动可查找物品。"><svg id="cabinDrawing" viewBox="0 0 1440 900" xmlns="http://www.w3.org/2000/svg" role="group" aria-label="美式复古科幻卡通火星基地：食物箱、水桶、净水机、急救箱、通讯器、墙历与宇航员">
-    <defs>
-      <linearGradient id="wallPaint" x2="0" y2="1"><stop stop-color="#f0dfb6"/><stop offset="1" stop-color="#f0dfb6"/></linearGradient>
-      <linearGradient id="floorPaint" x2="0" y2="1"><stop stop-color="#d7a06b"/><stop offset="1" stop-color="#d7a06b"/></linearGradient>
-      <linearGradient id="windowSky" x2="0" y2="1"><stop stop-color="#d69b73"/><stop offset=".65" stop-color="#d69b73"/><stop offset="1" stop-color="#d69b73"/></linearGradient>
-      <linearGradient id="visorPaint" x2=".5" y2="1"><stop stop-color="#426b7c"/><stop offset="1" stop-color="#294657"/></linearGradient>
-      <linearGradient id="waterPaint" x2="0" y2="1"><stop stop-color="#63a7b8"/><stop offset="1" stop-color="#63a7b8"/></linearGradient>
-      <pattern id="floorLines" width="175" height="73" patternUnits="userSpaceOnUse"><path d="M0 72h175M40 0v72" fill="none" stroke="#b98d7260" stroke-width="3"/></pattern>
-      <pattern id="wallDots" width="18" height="18" patternUnits="userSpaceOnUse"><circle cx="3" cy="3" r="1" fill="#c8b899" opacity=".25"/></pattern>
-      <clipPath id="windowClip"><rect x="508" y="218" width="407" height="216" rx="24"/></clipPath>
-      <filter id="softShadow" x="-30%" y="-40%" width="160%" height="190%"><feDropShadow dx="0" dy="9" stdDeviation="8" flood-color="#725b4b" flood-opacity=".13"/></filter>
-    </defs>
-    <!-- Curved pressure hull, a soft floor, and a little sunlight. -->
-    <path d="M80 521V251Q80 116 240 116h960q160 0 160 135v270Z" fill="url(#wallPaint)" stroke="#29343b" stroke-width="5"/>
-    <path d="M94 513V254q0-124 148-124h956q148 0 148 124v259" fill="url(#wallDots)"/>
-    <path d="M94 511h1252l77 264q10 36-35 36H52q-45 0-35-36Z" fill="url(#floorPaint)" stroke="#29343b" stroke-width="5"/>
-    <path d="M94 519h1252l77 264q6 23-35 23H52q-40 0-35-23Z" fill="url(#floorLines)"/>
-    <path d="M93 509h1254" stroke="#29343b" stroke-width="15"/><path d="M92 522h1256" stroke="#29343b" stroke-width="7"/>
-    <path d="M162 502V263q0-70 69-80M1278 502V263q0-70-69-80" fill="none" stroke="#29343b" stroke-width="23" stroke-linecap="round"/>
-    <path d="M163 502V265q0-69 67-79M1277 502V265q0-69-67-79" fill="none" stroke="#e4d3a8" stroke-width="12" stroke-linecap="round"/>
-    <rect x="511" y="143" width="400" height="19" rx="5.4" fill="#788e80"/><rect x="548" y="146" width="325" height="10" rx="3" fill="#f7edbb"/>
-    <rect x="625" y="173" width="172" height="22" rx="6.6" fill="#d1b98a"/><text x="711" y="188" text-anchor="middle" fill="#9b8c79" font-size="9" font-family="monospace" letter-spacing="3">火星生活舱</text>
-    <!-- The only view out: pink skies and the rust-red mesas. -->
-    <rect x="493" y="202" width="438" height="250" rx="35" fill="#63817c" stroke="#29343b" stroke-width="5"/>
-    <rect x="503" y="212" width="418" height="230" rx="29" fill="#f1d8a4"/>
-    <g clip-path="url(#windowClip)">
-      <rect x="508" y="218" width="407" height="216" fill="url(#windowSky)"/>
-      <circle cx="848" cy="256" r="22" fill="#ffe4a5"/><circle cx="551" cy="252" r="3" fill="#d9f8ee"/>
-      <path d="m508 373 80-65 45 17 49 50 64-68 42 14 36 48 91-37v119H508Z" fill="#a85e45"/>
-      <path d="M508 392q90-44 178-8t229-12v70H508Z" fill="#c3744e"/>
-      <path d="M508 419q90-34 180-7t227-5v45H508Z" fill="#e7a16c"/>
-      <g stroke="#f8d0a1" stroke-width="3" opacity=".6"><path d="M600 410h15m185-21h28m-116 43h9"/></g>
-      <path d="M548 229 525 315M569 226 541 325" stroke="#fff6df" stroke-width="8" stroke-linecap="round" opacity=".17"/>
-      <g stroke="#29343b" stroke-width="3"><path d="M864 424v-27m-15 0h29l-6-16h-24Z" fill="#607d8c"/><path d="M859 384 866 370l10 15" fill="none"/></g>
-    </g>
-    <circle cx="520" cy="324" r="4" fill="#708b82"/><circle cx="904" cy="324" r="4" fill="#708b82"/>
-    <path d="M490 452h442" stroke="#29343b" stroke-width="10" stroke-linecap="round"/>
-    <!-- Calendar and a pinned drawing. -->
-    <g class="habitat-object" data-object="calendar" role="button" tabindex="0" aria-label="墙历：查看存活天数和今日手册" transform="translate(218 204)"><title>墙历 · 查看当前日期</title><g class="object-art">
-      <rect x="-5" y="3" width="138" height="148" rx="9.6" fill="#aa8e7760"/>
-      <rect width="134" height="144" rx="8.4" fill="#fff9e8" stroke="#29343b" stroke-width="4"/><path d="M1 35V15Q1 1 15 1h104q14 0 14 14v20Z" fill="#dc8e78"/>
-      <path d="M29-7v23M105-7v23" stroke="#29343b" stroke-width="7" stroke-linecap="round"/>
-      <text x="67" y="29" text-anchor="middle" font-size="10" fill="#fff4d8" font-weight="600" letter-spacing="2">火星日</text>
-      <text id="calendarNumber" x="67" y="94" text-anchor="middle" font-size="48" font-family="monospace" fill="#627b75">01</text><text x="67" y="118" text-anchor="middle" font-size="10" fill="#afa28c">我们的火星日</text>
-      <path d="M25 131h10m8 0h10m8 0h10m8 0h10m8 0h10" stroke="#29343b" stroke-width="4" stroke-linecap="round"/>
-      <g class="object-caption"><rect x="25" y="154" width="84" height="24" rx="7.2"/><text x="67" y="170">任务日历</text></g>
-    </g></g>
-    <g transform="translate(1113 201) rotate(7)"><rect width="99" height="115" rx="3" fill="#ecc773" stroke="#29343b" stroke-width="3"/><rect x="28" y="-6" width="43" height="14" rx="3" fill="#719683" opacity=".85"/><circle cx="52" cy="46" r="23" fill="#b66041"/><path d="m34 48 12-8 10 9 15-7" fill="none" stroke="#f6c6a0" stroke-width="4"/><text x="49" y="89" text-anchor="middle" font-size="10" font-weight="900" fill="#29343b">注意安全</text></g>
-    <g fill="#29343b" opacity=".12"><path d="m198 587 82 70h174l-86-70Z"/><path d="m925 726 50 55h176l-49-55Z"/><path d="m1064 562 43 40h104l-52-40Z"/></g>
-    <!-- Left storage: cushions, rations, and a real food box. -->
-    <g class="habitat-object" data-object="food" role="button" tabindex="0" aria-label="食物箱：查看食物与加餐" transform="translate(208 591)"><title>食物箱 · 查看食物</title><g class="object-art">
-      <ellipse cx="94" cy="113" rx="67.2" ry="19" fill="#29343b30"/>
-      <rect x="-6" y="-7" width="199" height="116" rx="10.2" fill="#b86b3f" stroke="#29343b" stroke-width="4"/><path d="M-5 23h197" stroke="#29343b" stroke-width="5"/>
-      <rect x="-12" y="-15" width="211" height="35" rx="6.6" fill="#e1a253" stroke="#29343b" stroke-width="4"/>
-      <path d="M10-2h169M6 88h24m131 0h17" stroke="#f6c699" stroke-width="5" stroke-linecap="round"/>
-      <rect x="53" y="39" width="85" height="52" rx="5.4" fill="#f1d596" stroke="#29343b" stroke-width="3"/>
-      <path d="M71 73V57q9-15 26-10 14-1 18 12v14Z" fill="#d9ad67" stroke="#29343b" stroke-width="3"/><path d="m84 54-3 9m15-10-3 9m14-6-3 8" stroke="#f6d593" stroke-width="4" stroke-linecap="round"/>
-      <rect x="6" y="32" width="12" height="37" rx="3" fill="#b87859"/><rect x="169" y="32" width="12" height="37" rx="3" fill="#b87859"/>
-      <g class="object-caption"><rect x="45" y="123" width="100" height="25" rx="7.2"/><text x="95" y="140">食物补给箱</text></g>
-    </g></g>
-    <!-- Water station. The transparent tank's water level follows the inventory. -->
-    <g class="habitat-object" data-object="purifier" role="button" tabindex="0" aria-label="净水机：消耗电池净化饮用水" transform="translate(1062 418)"><title>净水机 · 净化回收水</title><g class="object-art">
-      <rect width="114" height="151" rx="15.0" fill="#86b4a2" stroke="#29343b" stroke-width="4"/><rect x="12" y="13" width="90" height="29" rx="7.2" fill="#4c8a7c"/><circle cx="83" cy="27" r="4" fill="#e1efb0"/><path d="M31 26h29" stroke="#d2efda" stroke-width="4" stroke-linecap="round"/>
-      <rect x="22" y="53" width="70" height="65" rx="7.2" fill="#3c6764"/><path d="M49 54v15h18v11" fill="none" stroke="#d4dfce" stroke-width="9" stroke-linecap="round"/>
-      <path class="water-drop" d="M67 83q-11 14 0 14t0-14" fill="#aee3e1"/>
-      <rect x="32" y="111" width="52" height="8" rx="3" fill="#e1ead9"/><path d="M25 135h62" stroke="#29343b" stroke-width="4" stroke-linecap="round"/>
-      <g class="object-caption"><rect x="10" y="160" width="94" height="24" rx="7.2"/><text x="57" y="176">循环净水机</text></g>
-    </g></g>
-    <g class="habitat-object" data-object="water" role="button" tabindex="0" aria-label="饮水桶：查看水资源与饮水休息" transform="translate(1201 551)"><title>饮水桶 · 给宇航员喝水</title><g class="object-art">
-      <ellipse cx="41" cy="123" rx="39.6" ry="15" fill="#29343b30"/>
-      <path d="M9 12q0-19 32-19t32 19" fill="none" stroke="#29343b" stroke-width="6"/><rect x="-7" y="15" width="97" height="102" rx="13.8" fill="#8fc5c7" stroke="#29343b" stroke-width="4"/>
-      <rect id="waterLevel" x="0" y="42" width="83" height="67" rx="10.2" fill="url(#waterPaint)" opacity=".8"/><path d="M5 52q14-7 29 0t25 0 24 0" fill="none" stroke="#ccf0ec" stroke-width="4"/>
-      <rect x="-4" y="6" width="91" height="20" rx="5.4" fill="#498f99" stroke="#29343b" stroke-width="4"/><path d="M15 31v61" stroke="#ddf2e7" stroke-width="5" opacity=".7" stroke-linecap="round"/>
-      <path d="M46 51q-22 25 0 25t0-25" fill="#e3f4ec"/><rect x="64" y="90" width="32" height="12" rx="3" fill="#a5bcb4" stroke="#29343b" stroke-width="3"/>
-      <g class="object-caption"><rect x="0" y="133" width="84" height="25" rx="7.2"/><text x="42" y="150">饮用水</text></g>
-    </g></g>
-    <!-- A soft bed, spare boots and the first-aid cabinet. -->
-    <g class="habitat-object" data-object="bed" role="button" tabindex="0" aria-label="床：确认收支并结束一天"><title>休息 · 看看今晚的收支</title>    <g class="object-art" stroke="#29343b" stroke-width="4"><rect x="925" y="648" width="177" height="66" rx="13.2" fill="#8c735b"/><path d="M943 712v20m141-20v20" stroke-width="9" stroke-linecap="round"/><rect x="915" y="628" width="194" height="61" rx="16.8" fill="#d7bc8b"/><rect x="980" y="619" width="134" height="61" rx="14.4" fill="#648d9d" stroke="#29343b"/><path d="M994 633h105m-100 16h106" stroke="#c5d7d8" stroke-width="3"/><rect x="924" y="631" width="56" height="36" rx="10.2" fill="#fff1d5" stroke="#29343b" stroke-width="3"/></g><g class="object-caption"><rect x="975" y="741" width="105" height="26" rx="7"/><text x="1027" y="759">结束今天</text></g></g>
-    <g class="habitat-object" data-object="medicine" role="button" tabindex="0" aria-label="急救箱：查看和使用药品" transform="translate(940 331)"><title>急救箱 · 查看药品</title><g class="object-art">
-      <rect x="-5" y="6" width="109" height="84" rx="10.2" fill="#9c887445"/><rect x="24" y="-11" width="52" height="24" rx="5.4" fill="none" stroke="#29343b" stroke-width="6"/>
-      <rect width="100" height="81" rx="9.6" fill="#f9e5b9" stroke="#29343b" stroke-width="4"/><path d="M1 26h98" stroke="#dcc8ab" stroke-width="3"/><rect x="36" y="21" width="28" height="46" rx="3" fill="#c9694f"/><rect x="27" y="30" width="46" height="28" rx="3" fill="#c9694f"/>
-      <g class="object-caption"><rect x="7" y="94" width="86" height="24" rx="7.2"/><text x="50" y="110">急救药品</text></g>
-    </g></g>
-    <!-- The radio desk. -->
-    <g class="habitat-object" data-object="radio" role="button" tabindex="0" aria-label="通讯器：收听随机讯息和查看日志" transform="translate(505 455)"><title>通讯器 · 收听地球消息</title><g class="object-art">
-      <path d="M24-4 6-44" stroke="#29343b" stroke-width="5" stroke-linecap="round"/><circle class="radio-light" cx="5" cy="-46" r="5" fill="#f4d997"/>
-      <rect x="0" y="0" width="140" height="102" rx="12.0" fill="#668e81" stroke="#29343b" stroke-width="4"/><rect x="11" y="12" width="118" height="59" rx="7.2" fill="#263d48" stroke="#d3dfc8" stroke-width="4"/>
-      <path class="radio-wave" d="M21 43h12l6-13 8 25 9-20 8 9h15l8-17 8 30 7-15h17" fill="none" stroke="#29343b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-      <circle cx="112" cy="86" r="7" fill="#ecc994" stroke="#29343b" stroke-width="3"/><path d="M23 85h44" stroke="#29343b" stroke-width="4" stroke-linecap="round"/><circle cx="81" cy="85" r="3" fill="#e8b691"/>
-      <g class="object-caption"><rect x="21" y="119" width="100" height="24" rx="7.2"/><text x="71" y="135">地球通讯器</text></g>
-    </g></g>
-    <!-- A tiny plant corner and a round woven rug make this a home. -->
-    <ellipse cx="763" cy="719" rx="88.2" ry="49" fill="#75947a" stroke="#29343b" stroke-width="4"/><ellipse cx="763" cy="719" rx="76.8" ry="38" fill="none" stroke="#29343b" stroke-width="3" stroke-dasharray="5 6"/>
-    <!-- Longer limbs, a human face and elastic expressions: a retro space-adventure lead. -->
-    <g id="cabinCrew" class="habitat-object" data-object="crew" data-mood="happy" role="button" tabindex="0" aria-label="宇航员：查看心情与聊天" transform="translate(751 440)"><title>宇航员 · 查看阿星的状态</title><g class="object-art crew-body" stroke-linejoin="round" stroke-linecap="round">
-      <ellipse cx="12" cy="279" rx="64" ry="13" fill="#29343b" opacity=".17"/>
-      <path d="M-34 91h-16v79h23" fill="#4d787c" stroke="#29343b" stroke-width="4"/><path d="M-43 108v40" stroke="#9bb9a1" stroke-width="5"/>
-      <path d="M-21 179-26 244-3 249 10 182m8 0 7 64 24-2-5-65" fill="#d5823f" stroke="#29343b" stroke-width="4.5"/>
-      <path d="m-13 191-5 45m50-42 8 42" stroke="#b55c35" stroke-width="8"/><path d="m-22 217 21 3m27 1 20-3" stroke="#29343b" stroke-width="3"/>
-      <path d="m-26 243-11 14-10 5v11H1l3-28Zm51 2-1 28h54v-11l-23-8-6-12Z" fill="#f3ddb4" stroke="#29343b" stroke-width="4.5"/>
-      <path d="M-45 270H1m25 0h50" stroke="#29343b" stroke-width="6"/><path d="m-31 254 16 3m51-3 15 3" stroke="#8b9c92" stroke-width="3"/>
-      <path d="m-26 96-23 13-14 33 23 22 22-18-9-17-9 9 11-23m69-20 29 18 14 30-22 21-21-17 8-18 10 10-11-24" fill="#e6a04c" stroke="#29343b" stroke-width="4.5"/>
-      <path d="m-39 141 12-11 13 11-14 17-10-2Zm96-11 15 12-4 14-11 2-14-16Z" fill="#faedcc" stroke="#29343b" stroke-width="3.5"/>
-      <path d="m-32 151 9-10m82 1 7 9" stroke="#8e9f92" stroke-width="2.5"/>
-      <path d="M-27 93-35 123-24 181q37 12 72-1l8-57-12-30-26-9Z" fill="#e6a04c" stroke="#29343b" stroke-width="4.5"/>
-      <path d="m31 98 12 24-8 58 13-1 8-56-12-30Z" fill="#bd683b"/><path d="M10 100v78" stroke="#29343b" stroke-width="3"/>
-      <path d="M-22 170q34 8 68-1v12q-36 9-68 0Z" fill="#38575b" stroke="#29343b" stroke-width="3"/>
-      <rect x="4" y="169" width="16" height="15" rx="2" fill="#e8cb73" stroke="#29343b" stroke-width="2.5"/>
-      <path d="M-23 119h26v24h-26Z" fill="#427b7b" stroke="#29343b" stroke-width="2.5"/><path d="m-10 123 3 5 6 1-5 4 1 6-5-3-5 3 1-6-4-4 6-1Z" fill="#f5dea0"/>
-      <rect x="20" y="117" width="23" height="11" rx="2" fill="#f4e6bc" stroke="#29343b" stroke-width="2"/><text x="31" y="125" text-anchor="middle" font-family="monospace" font-size="6" font-weight="900" fill="#29343b">ARES</text>
-      <path d="m-23 151 18 3m26 0 19-3" stroke="#bd683b" stroke-width="3"/>
-      <path d="M-12 77v20q24 14 43-1V77" fill="#c9956e" stroke="#29343b" stroke-width="3"/>
-      <path d="M-28 5Q9-13 48 4q17 11 18 39-3 30-25 45-29 13-57-1-24-19-23-49 1-20 11-33Z" fill="#f6e6bc" stroke="#29343b" stroke-width="4.5"/>
-      <path d="M-31 17q-12 42 15 64l-5-30 5-35Z" fill="#9bb4a5"/>
-      <path d="M-22 17q32-14 66-1 13 16 12 34-5 22-22 29-28 9-45-5-18-21-11-57Z" fill="#486d78" stroke="#29343b" stroke-width="3.5"/>
-      <path d="M-9 24q25-13 44 3l4 35q-2 21-24 22-23-3-26-22Z" fill="#e8b584" stroke="#29343b" stroke-width="3"/>
-      <path d="m-10 35-3-14 12 2L6 12l10 11 15-7-1 10 12-1-5 14-10-7-13 2-13-6Z" fill="#573d34" stroke="#29343b" stroke-width="2.5"/>
-      <path d="m27 46 9 10-12 3" fill="#d79568" stroke="#29343b" stroke-width="2.5"/>
-      <g class="face-happy">
-        <path d="m-2 38 12-3m12 1 10 3" fill="none" stroke="#29343b" stroke-width="3.5"/>
-        <ellipse cx="4" cy="47" rx="6" ry="8" fill="#fff5df" stroke="#29343b" stroke-width="2"/><ellipse cx="25" cy="47" rx="5.5" ry="8" fill="#fff5df" stroke="#29343b" stroke-width="2"/><ellipse cx="6" cy="48" rx="2.4" ry="4.5" fill="#29343b"/><ellipse cx="27" cy="48" rx="2.4" ry="4.5" fill="#29343b"/>
-        <path d="m-1 63 29-2q-1 17-13 17Q5 77-1 63Z" fill="#fff4d7" stroke="#29343b" stroke-width="2.5"/><path d="M3 68h20" stroke="#29343b" stroke-width="1.5"/>
-      </g>
-      <g class="face-sad">
-        <path d="m-2 36 13 2m10 0 12-4" fill="none" stroke="#29343b" stroke-width="3.5"/>
-        <ellipse cx="4" cy="48" rx="6" ry="8" fill="#fff5df" stroke="#29343b" stroke-width="2"/><ellipse cx="25" cy="48" rx="5.5" ry="8" fill="#fff5df" stroke="#29343b" stroke-width="2"/><circle cx="4" cy="52" r="3" fill="#29343b"/><circle cx="25" cy="52" r="3" fill="#29343b"/>
-        <path d="M3 73q12-12 23-3" fill="none" stroke="#29343b" stroke-width="3"/><path d="m0 58 6 1m17 0 7-2" stroke="#bb825e" stroke-width="2"/>
-      </g>
-      <g class="face-weak">
-        <path d="m-2 38 12 2m11 0 12-1" fill="none" stroke="#29343b" stroke-width="3"/>
-        <path d="M-2 45q6 13 12 0Zm22 0q6 13 13 0Z" fill="#fff5df" stroke="#29343b" stroke-width="2"/><path d="m0 58 8 1m13 0 10-2m-26 16 10-3 9 2" fill="none" stroke="#29343b" stroke-width="2.5"/>
-        <path d="M46 17q-11 16-1 19 13-1 1-19Z" fill="#78bec8" stroke="#29343b" stroke-width="2"/>
-      </g>
-      <path d="m-29 22 3-10 13-3" fill="none" stroke="#fff4d5" stroke-width="4"/>
-      <rect x="-19" y="84" width="62" height="13" rx="3" fill="#98b4a4" stroke="#29343b" stroke-width="3"/>
-      <path d="M-12 91h48" stroke="#d8dec2" stroke-width="2"/>
-      <g class="object-caption"><rect x="-42" y="294" width="108" height="25" rx="4"/><text x="12" y="311">宇航员 · 阿星</text></g>
-    </g></g>
-    <g class="habitat-object" data-object="door" role="button" tabindex="0" aria-label="舱门：检查装备并出舱" transform="translate(385 264)"><title>舱门 · 检查出舱条件</title><g class="object-art"><rect width="99" height="256" rx="35" fill="#577d78" stroke="#29343b" stroke-width="5"/><rect x="13" y="19" width="73" height="217" rx="29" fill="#bacabd" stroke="#29343b" stroke-width="3"/><circle cx="49" cy="73" r="24" fill="#ba7958" stroke="#29343b" stroke-width="4"/><path d="m31 77 16-16 20 16" fill="none" stroke="#efd2a0" stroke-width="3"/><rect x="70" y="141" width="13" height="32" rx="4" fill="#eac474" stroke="#29343b" stroke-width="3"/><path d="M25 216h49" stroke="#597f75" stroke-width="5"/><g class="object-caption"><rect x="-2" y="270" width="103" height="26" rx="7"/><text x="49" y="288">舱门 · 去探索</text></g></g></g>
-    <g class="habitat-object" data-object="console" role="button" tabindex="0" aria-label="控制台：查看发电和分配电力" transform="translate(485 631)"><title>控制台 · 分配设备电量</title><g class="object-art"><path d="M4 68v53m142-53v53" stroke="#29343b" stroke-width="9"/><path d="m0 0 140 0 15 75H-15Z" fill="#709186" stroke="#29343b" stroke-width="4"/><rect x="11" y="13" width="118" height="43" rx="7" fill="#2f5356" stroke="#29343b" stroke-width="3"/><text x="70" y="40" text-anchor="middle" fill="#f4df96" font-size="16" id="consoleGeneration">发电 7 格</text><circle cx="22" cy="64" r="5" fill="#e1bf70"/><circle cx="45" cy="64" r="5" fill="#c1d79e"/><path d="M79 64h38" stroke="#f1d7a5" stroke-width="4"/><g class="object-caption"><rect x="9" y="128" width="124" height="26" rx="7"/><text x="71" y="146">控制台 · 安排工作</text></g></g></g>
-    <g class="habitat-object" data-object="bench" role="button" tabindex="0" aria-label="实验台：分析带回的岩样" transform="translate(170 432)"><title>实验台 · 分析岩样</title><g class="object-art"><rect x="-12" y="-20" width="175" height="150" fill="transparent" pointer-events="all"/><path d="M3 44v48m135-48v48" stroke="#29343b" stroke-width="8"/><rect x="-8" y="27" width="160" height="25" rx="5" fill="#7d9e8e" stroke="#29343b" stroke-width="4"/><path d="M25 26V5l18-17 13 9-16 20v9" fill="#446b75" stroke="#29343b" stroke-width="3"/><rect x="11" y="20" width="48" height="8" rx="3" fill="#e8c77b" stroke="#29343b" stroke-width="2"/><g id="drawnSample" opacity=".2"><rect x="83" y="-4" width="47" height="31" rx="5" fill="#eacb83" stroke="#29343b" stroke-width="3"/><path d="m95 15 4-12 13-3 8 13-8 8Z" fill="#ab7054" stroke="#29343b" stroke-width="2"/></g><g class="object-caption"><rect x="5" y="100" width="130" height="26" rx="7"/><text x="70" y="118" id="sampleCount">实验台 · 暂无岩样</text></g></g></g>
-    <g id="crewSpeech" transform="translate(602 369)"><path d="M0 0q0-12 12-12h159q12 0 12 12v31q0 12-12 12h-18l17 20-35-20H12Q0 43 0 31Z" fill="#fff1cd" stroke="#29343b" stroke-width="3"/><text id="crewSpeechText" x="92" y="19" text-anchor="middle" fill="#29343b" font-size="11" font-weight="700">我可以开始工作。</text></g>
-    <g fill="#b8ac91" opacity=".7"><circle cx="210" cy="178" r="4"/><circle cx="1230" cy="178" r="4"/><circle cx="1312" cy="483" r="4"/><circle cx="131" cy="483" r="4"/></g>
-  </svg></div><div class="room-night" aria-hidden="true"></div>`;
+  /* The living quarters are a real-time 3D scene (js/cabin3d.js). Each interactive object has an
+     accessible DOM hotspot that follows it on screen; clicking the 3D model clicks the same hotspot. */
+  const OBJECTS = [
+    ['calendar', '墙历：查看存活天数和今日手册', '墙历 · 查看当前日期', '任务日历'],
+    ['bench', '实验台：分析带回的岩样', '实验台 · 分析岩样', '实验台 · 暂无岩样'],
+    ['door', '舱门：检查装备并出舱', '舱门 · 检查出舱条件', '舱门 · 去探索'],
+    ['radio', '通讯器：收听随机讯息和查看日志', '通讯器 · 收听地球消息', '地球通讯器'],
+    ['medicine', '急救箱：查看和使用药品', '急救箱 · 查看药品', '急救药品'],
+    ['purifier', '净水机：消耗电池净化饮用水', '净水机 · 净化回收水', '循环净水机'],
+    ['water', '饮水桶：查看水资源与饮水休息', '饮水桶 · 给宇航员喝水', '饮用水'],
+    ['food', '食物箱：查看食物与加餐', '食物箱 · 查看食物', '食物补给箱'],
+    ['console', '控制台：查看发电和分配电力', '控制台 · 分配设备电量', '控制台 · 安排工作'],
+    ['bed', '床：确认收支并结束一天', '休息 · 看看今晚的收支', '结束今天'],
+    ['crew', '宇航员：查看心情与聊天', '宇航员 · 查看阿星的状态', '宇航员 · 阿星']
+  ];
+  const artwork = `<div class="room-scroll" aria-label="火星生活舱。左右滑动可查找物品。"><div id="cabinDrawing" class="cabin3d" role="group" aria-label="美式复古科幻 3D 火星基地：食物箱、水桶、净水机、急救箱、通讯器、墙历与宇航员"><div class="cabin-tags">${
+    OBJECTS.map(([key, aria, title, caption]) => `<div class="habitat-object" data-object="${key}"${key === 'crew' ? ' id="cabinCrew" data-mood="happy"' : ''} role="button" tabindex="0" aria-label="${aria}" title="${title}"><span class="object-caption"${key === 'bench' ? ' id="sampleCount"' : ''}>${caption}</span></div>`).join('')
+  }</div><div id="crewSpeech" aria-hidden="true"><span id="crewSpeechText">我可以开始工作。</span></div></div></div><div class="room-night" aria-hidden="true"></div>`;
   function closeCard(restoreFocus = false) {
     $('#itemPopover').hidden = true;
     if (restoreFocus && anchor?.isConnected) anchor.focus({ preventScroll: true });
@@ -154,6 +28,8 @@ window.Habitat = (() => {
   return {
     init(callbacks) {
       handlers = callbacks; $('#habitatScene').innerHTML = artwork;
+      const tags = {}; document.querySelectorAll('#cabinDrawing [data-object]').forEach(el => tags[el.dataset.object] = el);
+      Cabin3D.mount($('#cabinDrawing'), tags);
       document.querySelectorAll('[data-object], #survivalHUD [data-item]').forEach(el => {
         el.addEventListener('click', e => { e.stopPropagation(); handlers.inspect(el.dataset.object || el.dataset.item, el); });
         if (el.matches('[data-object]')) el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el.dispatchEvent(new MouseEvent('click', { bubbles: true })); } });
@@ -172,24 +48,24 @@ window.Habitat = (() => {
       $('#viewOverview').setAttribute('aria-pressed', String(overview)); $('#viewOverview').hidden = !interior && !overview;
       $('#viewInterior').textContent = interior || overview ? '基地生活' : '回舱指引'; $('#viewExterior').textContent = interior || overview ? '出舱探索' : '任务位置';
       $('#roomHint').textContent = interior ? (innerWidth < 700 ? '左右滑动查找物品 · 点击舱门出舱 · 点击床结束当天' : '点击物品操作 · 点击舱门出舱 · 点击床结束当天') : 'WASD 移动 · 拖动画面转头 · 靠近目标按 E';
-      World.setRendering(!interior); closeCard();
+      World.setRendering(!interior); Cabin3D.setActive(interior); closeCard();
     },
     render(g) {
-      $('#consoleGeneration').textContent = `发电 ${g.gen} 格`;
+      Cabin3D.update(g);
       $('#cabinFood').textContent = Math.round(g.food); $('#cabinWater').textContent = Math.round(g.water); $('#cabinMeds').textContent = g.meds; $('#cabinMorale').textContent = Math.round(g.morale);
-      $('#cabinDay').innerHTML = `${String(g.sol).padStart(2, '0')}<small> / 30</small>`; $('#calendarNumber').textContent = String(g.sol).padStart(2, '0');
+      $('#cabinDay').innerHTML = `${String(g.sol).padStart(2, '0')}<small> / 30</small>`;
       const mood = g.morale < 30 || g.food < 10 || g.water < 10 ? 'weak' : g.morale < 60 || g.food < 20 || g.water < 20 ? 'sad' : 'happy';
-      $('#cabinCrew').dataset.mood = mood;
+      $('#cabinCrew').dataset.mood = mood; Cabin3D.setMood(mood);
       $('#crewSpeechText').textContent = { happy: '我可以开始工作。', sad: '我有点想家。', weak: '我需要休息。' }[mood];
       $('#cabinGreeting').textContent = g.storm > 0 ? '沙尘暴正在影响发电。请检查电力。' : mood === 'weak' ? '宇航员状态较差。请检查食物和饮水。' : '请检查物资和电力。';
-      const level = 71 * Math.max(0, Math.min(1, g.water / 100)); $('#waterLevel').setAttribute('y', 110 - level); $('#waterLevel').setAttribute('height', level);
       for (const [id, value, limit] of [['food',g.food,20],['water',g.water,20],['medicine',g.meds,1],['crew',g.morale,30]]) {
         document.querySelector(`#survivalHUD [data-item="${id}"]`).classList.toggle('low', value < limit);
+        Cabin3D.setLow(id, value < limit);
       }
     },
     samples(samples) {
       const pending=samples.filter(s=>s.status==='stored').length, analysed=samples.filter(s=>s.status==='analysed').length;
-      $('#drawnSample').setAttribute('opacity', pending || analysed ? '1' : '.2');
+      Cabin3D.setSamples(pending + analysed);
       $('#sampleCount').textContent = pending ? `实验台 · ${pending} 份待分析` : analysed ? `已分析 ${analysed} 份岩样` : '实验台 · 暂无岩样';
     },
     card({ title, value, description, actions = [], anchor: target }) {
